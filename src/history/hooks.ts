@@ -24,6 +24,22 @@ export function useInView<T extends Element>(threshold = 0.35) {
   return [ref, seen] as const;
 }
 
+/** true khi phần tử đang hiện trên màn hình (cập nhật liên tục, khác useInView chỉ bật một lần). */
+export function useVisible<T extends Element>(threshold = 0.5) {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+
+  return [ref, visible] as const;
+}
+
 export function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {

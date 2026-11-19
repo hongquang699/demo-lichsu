@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ERAS, type Era } from './data';
-import { prefersReducedMotion, useInView, useMediaQuery } from './hooks';
+import { prefersReducedMotion, useInView, useMediaQuery, useVisible } from './hooks';
 import { Chevron, Lotus } from './Ornament';
 import { PhotoView, ZoomablePhoto } from './Photo';
 
@@ -105,19 +105,60 @@ interface Flip {
   to: number;
   dir: 1 | -1;
 }
+/** Tờ giấy đang được kéo bằng tay. `p`: 0 = nằm yên, 1 = đã lật hẳn sang bên kia. */
+interface Drag extends Flip {
+  p: number;
+  release?: 0 | 1; // đã buông tay: lật nốt (1) hay rơi về chỗ cũ (0)
+}
 
 interface BookProps {
   page: number;
   onPage: (i: number) => void;
 }
 
+const AUTO_MS = 6500; // đang xem sách thì cứ chừng này lại tự giở sang trang mới
+const LAST = ERAS.length - 1;
+
+/** Tờ giấy đang lật và bóng đổ của nó; mọi chuyển động tính theo biến --p (0 -> 1). */
+function TurningLeaf({
+  dir,
+  className,
+  style,
+  front,
+  back,
+  onEnd,
+}: {
+  dir: 1 | -1;
+  className: string;
+  style?: CSSProperties;
+  front: ReactNode;
+  back: ReactNode;
+  onEnd: () => void;
+}) {
+  const fwd = dir === 1;
+  return (
+    <div className={`h-turning ${className}`} style={style} onAnimationEnd={own(onEnd)}>
+      <div className={`h-cast h-cast--${fwd ? 'reveal-right' : 'reveal-left'}`} aria-hidden="true" />
+      <div className={`h-cast h-cast--${fwd ? 'land-left' : 'land-right'}`} aria-hidden="true" />
+      <div className={`h-leaf h-leaf--${fwd ? 'right' : 'left'}`}>
+        <div className="h-leaf__face h-leaf__front">{front}</div>
+        <div className="h-leaf__face h-leaf__back">{back}</div>
+      </div>
+    </div>
+  );
+}
+
 export function Book({ page, onPage }: BookProps) {
   const [stageRef, inView] = useInView<HTMLElement>(0.45);
+  const [sceneRef, visible] = useVisible<HTMLDivElement>(0.5);
   const single = useMediaQuery('(max-width: 760px)');
   const [phase, setPhase] = useState<Phase>('closed');
   const [shown, setShown] = useState(page);
   const [flip, setFlip] = useState<Flip | null>(null);
-  const drag = useRef<number | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const [hold, setHold] = useState(false); // chuột đang đặt trên sách hoặc sách đang được chọn bằng bàn phím
+  const [nudge, setNudge] = useState(0); // tăng mỗi lần người dùng chạm vào sách để đếm lại từ đầu
+  const pointer = useRef<{ x: number; id: number; w: number } | null>(null);
 
   // Lướt tới sách thì sách tự mở ra trang đầu
   useEffect(() => {
@@ -130,15 +171,24 @@ export function Book({ page, onPage }: BookProps) {
     return () => window.clearTimeout(t);
   }, [inView, phase]);
 
-  // Trang đích thay đổi -> lật từ trang đang hiện sang trang đích
+  // Trang đích thay đổi (nút, thanh mốc, tự giở) -> lật từ trang đang hiện sang trang đích
   useEffect(() => {
-    if (single || phase !== 'open' || flip || page === shown) return;
+    if (single || phase !== 'open' || flip || drag || page === shown) return;
     if (prefersReducedMotion()) {
       setShown(page);
       return;
     }
     setFlip({ from: shown, to: page, dir: page > shown ? 1 : -1 });
-  }, [page, shown, phase, flip, single]);
+  }, [page, shown, phase, flip, drag, single]);
+
+  // Tự giở trang: chỉ chạy khi sách đang hiện trên màn hình, đứng yên và người dùng không đặt tay lên sách
+  const autoRunning =
+    visible && !hold && phase === 'open' && !flip && !drag && page === shown && page < LAST && !prefersReducedMotion();
+  useEffect(() => {
+    if (!autoRunning) return;
+    const t = window.setTimeout(() => onPage(page + 1), AUTO_MS);
+    return () => window.clearTimeout(t);
+  }, [autoRunning, page, nudge, onPage]);
 
   const finishFlip = () => {
     if (!flip) return;
@@ -147,7 +197,8 @@ export function Book({ page, onPage }: BookProps) {
   };
 
   const go = (d: 1 | -1) => {
-    const next = Math.min(ERAS.length - 1, Math.max(0, page + d));
+    setNudge((n) => n + 1);
+    const next = Math.min(LAST, Math.max(0, page + d));
     if (phase !== 'open') {
       setPhase('open');
       return;
@@ -155,19 +206,75 @@ export function Book({ page, onPage }: BookProps) {
     if (next !== page) onPage(next);
   };
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    drag.current = e.clientX;
+  /* Kéo mép trang: tờ giấy đi theo tay, buông ra thì lật nốt hoặc rơi về chỗ cũ */
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    pointer.current = { x: e.clientX, id: e.pointerId, w: e.currentTarget.getBoundingClientRect().width };
+    setNudge((n) => n + 1);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const s = pointer.current;
+    if (!s || single || phase !== 'open' || flip) return;
+    const dx = e.clientX - s.x;
+    if (!drag) {
+      if (Math.abs(dx) < 12) return;
+      const dir: 1 | -1 = dx < 0 ? 1 : -1;
+      const to = shown + dir;
+      if (to < 0 || to > LAST || page !== shown) {
+        pointer.current = null;
+        return;
+      }
+      try {
+        e.currentTarget.setPointerCapture(s.id); // giữ tờ giấy theo tay kể cả khi con trỏ ra khỏi sách
+      } catch {
+        /* con trỏ đã nhả trước khi kịp bắt: vẫn kéo bình thường */
+      }
+      setDrag({ from: shown, to, dir, p: 0 });
+      return;
+    }
+    if (drag.release !== undefined) return;
+    // Kéo được chừng 80% bề ngang cuốn sách là tờ giấy lật hẳn sang bên kia
+    const p = Math.min(1, Math.max(0, (-dx * drag.dir) / (s.w * 0.8)));
+    setDrag({ ...drag, p });
+  };
+  const releaseDrag = (complete: boolean) => {
+    if (drag && drag.release === undefined) setDrag({ ...drag, release: complete ? 1 : 0 });
   };
   const onPointerUp = (e: React.PointerEvent) => {
-    if (drag.current === null) return;
-    const dx = e.clientX - drag.current;
-    drag.current = null;
-    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    const s = pointer.current;
+    pointer.current = null;
+    if (!s) return;
+    if (drag) {
+      releaseDrag(drag.p > 0.3);
+      return;
+    }
+    const dx = e.clientX - s.x;
+    if (single && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
   };
+  const onPointerCancel = () => {
+    pointer.current = null;
+    releaseDrag(false);
+  };
+  const endDrag = () => {
+    if (!drag || drag.release === undefined) return;
+    if (drag.release === 1) {
+      setShown(drag.to);
+      onPage(drag.to);
+    }
+    setDrag(null);
+  };
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowRight') go(1);
     if (e.key === 'ArrowLeft') go(-1);
   };
+
+  const spread = (l: number, r: number) => (
+    <>
+      <div className="h-sheet h-sheet--left">{left(l)}</div>
+      <div className="h-sheet h-sheet--right">{right(r)}</div>
+    </>
+  );
 
   let content: ReactNode;
 
@@ -182,7 +289,7 @@ export function Book({ page, onPage }: BookProps) {
       ) : (
         <div
           className={`h-sheet h-sheet--single h-sheet--cover${phase === 'opening' ? ' is-opening' : ''}`}
-          onAnimationEnd={own(() => setPhase("open"))}
+          onAnimationEnd={own(() => setPhase('open'))}
         >
           <Cover />
         </div>
@@ -192,68 +299,103 @@ export function Book({ page, onPage }: BookProps) {
       <>
         <div className="h-sheet h-sheet--left h-sheet--blank" />
         <div className="h-sheet h-sheet--right">{right(0)}</div>
-        <div className={`h-leaf h-leaf--right${phase === 'opening' ? ' is-flipping' : ''}`} onAnimationEnd={own(() => setPhase("open"))}>
-          <div className="h-leaf__face h-leaf__front">
-            <Cover />
-          </div>
-          <div className="h-leaf__face h-leaf__back">{left(0)}</div>
-        </div>
+        <TurningLeaf
+          dir={1}
+          className={phase === 'opening' ? 'is-auto is-cover' : ''}
+          front={<Cover />}
+          back={left(0)}
+          onEnd={() => setPhase('open')}
+        />
       </>
     );
-  } else if (flip) {
-    const fwd = flip.dir === 1;
+  } else if (flip || drag) {
+    const f = (drag ?? flip) as Flip;
+    const fwd = f.dir === 1;
+    let className = 'is-auto';
+    let style: CSSProperties | undefined;
+    if (drag) {
+      if (drag.release === undefined) {
+        className = 'is-dragging';
+        style = { '--p': drag.p } as CSSProperties;
+      } else {
+        // Buông tay: đi tiếp từ chỗ đang dừng, quãng còn lại càng ngắn thì càng nhanh
+        className = 'is-release';
+        const ms = Math.round(180 + 520 * Math.abs(drag.release - drag.p));
+        style = { '--from': drag.p, '--to': drag.release, '--release-ms': `${ms}ms` } as CSSProperties;
+      }
+    }
     content = (
       <>
-        <div className="h-sheet h-sheet--left">{left(fwd ? flip.from : flip.to)}</div>
-        <div className="h-sheet h-sheet--right">{right(fwd ? flip.to : flip.from)}</div>
-        <div className={`h-leaf h-leaf--${fwd ? 'right' : 'left'} is-flipping`} onAnimationEnd={own(finishFlip)}>
-          <div className="h-leaf__face h-leaf__front">{fwd ? right(flip.from) : left(flip.from)}</div>
-          <div className="h-leaf__face h-leaf__back">{fwd ? left(flip.to) : right(flip.to)}</div>
-        </div>
+        {spread(fwd ? f.from : f.to, fwd ? f.to : f.from)}
+        <TurningLeaf
+          dir={f.dir}
+          className={className}
+          style={style}
+          front={fwd ? right(f.from) : left(f.from)}
+          back={fwd ? left(f.to) : right(f.to)}
+          onEnd={drag ? endDrag : finishFlip}
+        />
       </>
     );
   } else {
-    content = (
-      <>
-        <div className="h-sheet h-sheet--left">{left(shown)}</div>
-        <div className="h-sheet h-sheet--right">{right(shown)}</div>
-      </>
-    );
+    content = spread(shown, shown);
   }
+
+  const pick = (i: number) => {
+    setNudge((n) => n + 1);
+    if (phase !== 'open') setPhase('open');
+    onPage(i);
+  };
 
   return (
     <section ref={stageRef} className="h-book-stage" id="h-book" aria-label="Cuốn sách lịch sử">
       <div className="h-book-stage__light" aria-hidden="true" />
       <div className="h-book-layout">
-      <Timeline page={page} onPage={(i) => (phase === 'open' ? onPage(i) : (setPhase('open'), onPage(i)))} />
-      <div className="h-book-main">
-      <div className="h-book-scene">
-        <div
-          className={`h-book is-${phase}${single ? ' is-single' : ''}`}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => (drag.current = null)}
-          onKeyDown={onKeyDown}
-          tabIndex={0}
-          aria-roledescription="sách"
-          aria-label={`Trang ${ERAS[page].range}. Kéo ngang hoặc dùng phím mũi tên để lật trang.`}
-        >
-          {content}
-          <div className="h-book__spine" aria-hidden="true" />
-        </div>
-        <div className="h-book-shadow" aria-hidden="true" />
-      </div>
+        <Timeline page={page} onPage={pick} />
+        <div className="h-book-main">
+          <div
+            className="h-book-scene"
+            ref={sceneRef}
+            onPointerEnter={(e) => e.pointerType === 'mouse' && setHold(true)}
+            onPointerLeave={(e) => e.pointerType === 'mouse' && setHold(false)}
+            onFocus={() => setHold(true)}
+            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setHold(false)}
+          >
+            <div
+              className={`h-book is-${phase}${single ? ' is-single' : ''}${drag ? ' is-grabbing' : ''}`}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel}
+              onKeyDown={onKeyDown}
+              tabIndex={0}
+              aria-roledescription="sách"
+              aria-label={`Trang ${ERAS[page].range}. Kéo mép trang hoặc dùng phím mũi tên để lật trang.`}
+            >
+              {content}
+              <div className="h-book__spine" aria-hidden="true" />
+            </div>
+            <div className="h-book-shadow" aria-hidden="true" />
+          </div>
 
-      <div className="h-book-nav">
-        <button type="button" className="h-arrow" onClick={() => go(-1)} disabled={phase === 'open' && page === 0} aria-label="Trang trước">
-          <Chevron dir="left" />
-        </button>
-        <p className="h-book-nav__hint">{phase === 'open' ? 'Kéo ngang trên sách để lật trang' : 'Đang mở sách…'}</p>
-        <button type="button" className="h-arrow" onClick={() => go(1)} disabled={page === ERAS.length - 1} aria-label="Trang sau">
-          <Chevron dir="right" />
-        </button>
-      </div>
-      </div>
+          <div className="h-book-nav">
+            <button type="button" className="h-arrow" onClick={() => go(-1)} disabled={phase === 'open' && page === 0} aria-label="Trang trước">
+              <Chevron dir="left" />
+            </button>
+            <div className="h-book-nav__mid">
+              <p className="h-book-nav__hint">
+                {phase !== 'open' ? 'Đang mở sách…' : single ? 'Vuốt ngang để lật trang' : 'Kéo mép trang để lật'}
+              </p>
+              {/* Vạch đếm giờ tới lần tự giở trang kế tiếp */}
+              <span className="h-autoflip" aria-hidden="true">
+                <span key={`${page}-${nudge}`} className={`h-autoflip__fill${autoRunning ? ' is-running' : ''}`} />
+              </span>
+            </div>
+            <button type="button" className="h-arrow" onClick={() => go(1)} disabled={page === LAST} aria-label="Trang sau">
+              <Chevron dir="right" />
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );

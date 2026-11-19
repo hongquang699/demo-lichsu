@@ -37,7 +37,7 @@ export function HistoryPage() {
     const step = () => {
       const i = currentSection();
       if (SECTIONS[i] === 'h-book' && pageRef.current < ERAS.length - 1) {
-        setPage((p) => p + 1);
+        // Sách tự giở trang khi đang hiện trên màn hình; đợi tới trang cuối rồi mới cuộn tiếp
       } else if (i < SECTIONS.length - 1) {
         document.getElementById(SECTIONS[i + 1])?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {

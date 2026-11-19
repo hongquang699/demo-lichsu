@@ -24,6 +24,7 @@ function currentSection() {
 
 export function HistoryPage() {
   const [page, setPage] = useState(0);
+  // Tự chạy bật sẵn (trừ khi máy chọn giảm chuyển động); tắt hẳn khi người dùng lướt tới cuối trang
   const [auto, setAuto] = useState(() => !prefersReducedMotion());
   const pageRef = useRef(page);
   pageRef.current = page;
@@ -49,12 +50,19 @@ export function HistoryPage() {
       window.clearTimeout(timer);
       timer = window.setTimeout(step, IDLE_MS);
     };
+    // Lướt tới đáy trang thì tắt tự chạy, không kéo người dùng đi đâu nữa
+    const onScroll = () => {
+      const bottom = document.documentElement.scrollHeight - window.innerHeight - 4;
+      if (window.scrollY >= bottom) setAuto(false);
+    };
     const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
     events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
+    window.addEventListener('scroll', onScroll, { passive: true });
     reset();
     return () => {
       window.clearTimeout(timer);
       events.forEach((ev) => window.removeEventListener(ev, reset));
+      window.removeEventListener('scroll', onScroll);
     };
   }, [auto]);
 
@@ -64,17 +72,6 @@ export function HistoryPage() {
       <Book page={page} onPage={setPage} />
       <Compare />
       <Leaders />
-
-      <button
-        type="button"
-        className={`h-autoplay${auto ? ' is-on' : ''}`}
-        onClick={() => setAuto((a) => !a)}
-        aria-pressed={auto}
-        title="Sau vài giây không thao tác, trang tự cuộn xuống và tự lật sách"
-      >
-        <span className="h-autoplay__dot" aria-hidden="true" />
-        {auto ? 'Đang tự chạy' : 'Tự chạy'}
-      </button>
     </div>
   );
 }

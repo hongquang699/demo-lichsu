@@ -224,6 +224,9 @@ export function Book({ page, onPage }: BookProps) {
   return (
     <section ref={stageRef} className="h-book-stage" id="h-book" aria-label="Cuốn sách lịch sử">
       <div className="h-book-stage__light" aria-hidden="true" />
+      <div className="h-book-layout">
+      <Timeline page={page} onPage={(i) => (phase === 'open' ? onPage(i) : (setPhase('open'), onPage(i)))} />
+      <div className="h-book-main">
       <div className="h-book-scene">
         <div
           className={`h-book is-${phase}${single ? ' is-single' : ''}`}
@@ -250,8 +253,8 @@ export function Book({ page, onPage }: BookProps) {
           <Chevron dir="right" />
         </button>
       </div>
-
-      <Timeline page={page} onPage={(i) => (phase === 'open' ? onPage(i) : (setPhase('open'), onPage(i)))} />
+      </div>
+      </div>
     </section>
   );
 }
@@ -259,42 +262,28 @@ export function Book({ page, onPage }: BookProps) {
 /* ---------- Thanh mốc thời gian ---------- */
 
 function Timeline({ page, onPage }: BookProps) {
-  const total = ERAS.reduce((n, e) => n + e.milestones.length, 0);
-  // Vị trí (theo %) của điểm giữa từng giai đoạn trên thanh
-  let acc = 0;
-  const centers = ERAS.map((e) => {
-    const c = ((acc + e.milestones.length / 2) / total) * 100;
-    acc += e.milestones.length;
-    return c;
-  });
-
   return (
     <nav className="h-timeline" aria-label="Mốc lịch sử">
-      <div className="h-timeline__track">
-        <div className="h-timeline__rail" aria-hidden="true">
-          <div className="h-timeline__fill" style={{ width: `${centers[page]}%` }} />
-          <div className="h-timeline__marker" style={{ left: `${centers[page]}%` }} />
-        </div>
-        <ol className="h-timeline__eras">
-          {ERAS.map((era, i) => (
-            <li key={era.id} className={`h-tl-era${i === page ? ' is-active' : ''}${i < page ? ' is-past' : ''}`} style={{ flexGrow: era.milestones.length }}>
-              <button type="button" className="h-tl-era__btn" onClick={() => onPage(i)} aria-current={i === page ? 'step' : undefined}>
-                {era.range}
-              </button>
-              <ul className="h-tl-era__ticks">
-                {era.milestones.map((m) => (
-                  <li key={m.label}>
-                    <button type="button" className="h-tl-tick" onClick={() => onPage(i)} title={m.note}>
-                      <span className="h-tl-tick__dot" aria-hidden="true" />
-                      {m.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
-      </div>
+      <ol className="h-timeline__eras">
+        {ERAS.map((era, i) => (
+          <li key={era.id} className={`h-tl-era${i === page ? ' is-active' : ''}${i < page ? ' is-past' : ''}`}>
+            <button type="button" className="h-tl-era__btn" onClick={() => onPage(i)} aria-current={i === page ? 'step' : undefined}>
+              <span className="h-tl-era__dot" aria-hidden="true" />
+              {era.range}
+            </button>
+            <ul className="h-tl-era__ticks">
+              {era.milestones.map((m) => (
+                <li key={m.label}>
+                  <button type="button" className="h-tl-tick" onClick={() => onPage(i)} title={m.note}>
+                    <span className="h-tl-tick__dot" aria-hidden="true" />
+                    {m.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
     </nav>
   );
 }

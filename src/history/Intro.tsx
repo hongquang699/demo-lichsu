@@ -42,7 +42,15 @@ export function Intro() {
           <p className="h-video__school">Trường THPT Chuyên Phan Bội Châu · Nghệ An</p>
           <p className="h-video__caption">{INTRO_VIDEO.caption}</p>
         </div>
-        <a className="h-scroll-cue" href="#h-book">
+        <a
+          className="h-scroll-cue"
+          href="#h-book"
+          onClick={(e) => {
+            // Không đổi hash: App dùng hash để chọn trang (#/lich-su), đổi sang #h-book sẽ về trang chủ
+            e.preventDefault();
+            document.getElementById('h-book')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        >
           Lướt xuống để mở sách
         </a>
       </div>

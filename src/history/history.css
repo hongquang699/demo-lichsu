@@ -1,5 +1,19 @@
 /* ===== Trang Lịch sử =====
-   Nền beige, điểm nhấn đỏ đô / navy / xanh rêu (biến màu lấy từ styles.css). */
+   Bảng màu "bản 2": nền kem, tiêu đề đỏ cam / cam, chữ nâu đỏ và mực đậm. */
+
+/* Khi đang ở trang Lịch sử, nền trang và thanh chuyển trang cũng theo bảng màu này */
+:root:has(.page--history) {
+  --bg: #fdeedb;
+  --cream: #fdf6ec;
+  --burgundy: #d23c0c;
+  --navy: #1c1a3e;
+  --green: #85231c;
+  --beige-rgb: 253 238 219;
+  --navy-rgb: 28 26 62;
+  --shade-rgb: 120 52 20;
+  --dark-rgb: 40 18 16;
+  --serif: 'Charter', 'Bitstream Charter', 'Times New Roman', Times, serif;
+}
 
 .page.page--history {
   /* Trang này không có thanh phát nhạc nên không chừa chỗ cho nó */
@@ -8,20 +22,23 @@
 }
 
 .history {
-  /* Chữ có chân cổ điển: Playfair cho tiêu đề, Garamond cho chữ đọc */
-  --display: 'Playfair Display', 'Noto Serif', Georgia, serif;
-  --serif: 'EB Garamond', 'Noto Serif', Georgia, serif;
-  /* Bảng màu: chỉ dùng 4 màu gốc, các sắc độ khác đều pha từ 4 màu này */
-  --beige: #f5f5dc;    /* nền */
-  --burgundy: #800020; /* đỏ đô: màu chủ đạo, hoa văn */
-  --navy: #000080;     /* xanh navy: tiêu đề, nút */
-  --green: #2e4a22;    /* xanh rêu: chữ phụ */
-  --beige-rgb: 245 245 220;
-  --burg-rgb: 128 0 32;
-  --navy-rgb: 0 0 128;
-  /* Bóng đổ: pha đỏ đô + xanh rêu; lớp phủ tối: pha navy + đỏ đô */
-  --shade-rgb: 87 37 41;
-  --dark-rgb: 32 4 40;
+  /* Chữ theo bản thiết kế: Cochin nghiêng cho tiêu đề, Charter cho chữ đọc,
+     Courier cho nhãn và số liệu. Máy không có font thì lùi về Times New Roman. */
+  --display: 'Cochin', 'Times New Roman', Times, serif;
+  --serif: 'Charter', 'Bitstream Charter', 'Times New Roman', Times, serif;
+  --mono: 'Courier New', Courier, monospace;
+  /* Bảng màu "bản 2": nền kem, tiêu đề đỏ cam -> cam, chữ nâu đỏ.
+     Tên biến giữ như cũ để mọi phần trên trang đổi màu theo. */
+  --beige: #fdeedb;    /* nền kem */
+  --burgundy: #d23c0c; /* đỏ cam: tiêu đề, điểm nhấn, hoa văn */
+  --navy: #1c1a3e;     /* mực đậm: chữ thường */
+  --green: #85231c;    /* nâu đỏ: chữ phụ, chữ trên nút cam */
+  --beige-rgb: 253 238 219;
+  --burg-rgb: 210 60 12;
+  --navy-rgb: 28 26 62;
+  /* Bóng đổ: nâu cam; lớp phủ tối: nâu sẫm */
+  --shade-rgb: 120 52 20;
+  --dark-rgb: 40 18 16;
   --paper: color-mix(in srgb, var(--beige) 55%, #fff);
   --paper-edge: color-mix(in srgb, var(--beige) 90%, var(--burgundy));
   --paper-edge-2: color-mix(in srgb, var(--beige) 84%, var(--burgundy));
@@ -1012,68 +1029,80 @@
   outline-offset: 2px;
 }
 
-/* ---------- Thanh mốc thời gian ---------- */
+/* ---------- Thanh mốc thời gian: dọc bên trái sách, đi từ trên xuống ---------- */
+
+.h-book-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: clamp(16px, 2.5vw, 32px);
+  align-items: stretch;
+}
+
+.h-book-main {
+  min-width: 0;
+}
 
 .h-timeline {
+  --line-x: 8px;   /* vị trí đường dọc tính từ mép trái */
+  --line: rgb(var(--navy-rgb) / 0.16);
   position: relative;
-  margin: 10px -4px 0;
-  padding: 4px 4px 6px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.h-timeline__track {
-  position: relative;
-  min-width: 760px;
-}
-
-.h-timeline__rail {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 48px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgb(var(--navy-rgb) / 0.16);
-}
-
-.h-timeline__fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--burgundy);
-  transition: width 700ms var(--ease-out);
-}
-
-.h-timeline__marker {
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--paper);
-  border: 4px solid var(--burgundy);
-  box-shadow: 0 0 0 5px rgb(var(--burg-rgb) / 0.16);
-  transform: translate(-50%, -50%);
-  transition: left 700ms var(--ease-out);
-  z-index: 1;
+  padding: 8px 0 52px; /* chừa chỗ ngang hàng nút lật trang bên dưới sách */
 }
 
 .h-timeline__eras {
   list-style: none;
   margin: 0;
   padding: 0;
+  height: 100%;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .h-tl-era {
-  flex-basis: 0;
-  min-width: 0;
-  text-align: center;
+  position: relative;
+  flex: 1 1 auto;
+  padding-left: calc(var(--line-x) * 2 + 14px);
+}
+
+/* Đoạn đường dọc của từng giai đoạn: nối liền nhau thành một thanh */
+.h-tl-era::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--line-x) - 1.5px);
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--line);
+  transition: background 500ms var(--ease-out);
+}
+
+.h-tl-era:first-child::before {
+  top: 15px;
+  border-radius: 3px 3px 0 0;
+}
+
+.h-tl-era:last-child::before {
+  border-radius: 0 0 3px 3px;
+}
+
+.h-tl-era.is-past::before {
+  background: var(--burgundy);
+}
+
+/* Giai đoạn đang xem: tô tới điểm mốc của nó rồi nhạt dần */
+.h-tl-era.is-active::before {
+  background: linear-gradient(180deg, var(--burgundy) 0 15px, var(--line) 15px);
 }
 
 .h-tl-era__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   height: 30px;
-  padding: 0 12px;
+  margin-left: -10px;
+  padding: 0 12px 0 10px;
   border: 0;
   border-radius: 999px;
   background: none;
@@ -1094,49 +1123,74 @@
   color: var(--cream);
 }
 
-.h-tl-era__ticks {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
+/* Điểm mốc lớn trên đường dọc, ngang hàng tên giai đoạn */
+.h-tl-era__dot {
+  position: absolute;
+  left: calc(var(--line-x) - (var(--line-x) * 2 + 14px) + 10px);
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 3px solid rgb(var(--navy-rgb) / 0.3);
+  transform: translate(-50%, -50%);
+  transition: border-color 300ms, box-shadow 300ms, background-color 300ms;
 }
 
-.h-tl-era__ticks > li {
-  flex: 1 1 0;
-  min-width: 0;
+.h-tl-era.is-past .h-tl-era__dot {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+}
+
+.h-tl-era.is-active .h-tl-era__dot {
+  width: 18px;
+  height: 18px;
+  border: 4px solid var(--burgundy);
+  background: var(--paper);
+  box-shadow: 0 0 0 5px rgb(var(--burg-rgb) / 0.16);
+}
+
+.h-tl-era__ticks {
+  list-style: none;
+  margin: 2px 0 10px;
+  padding: 0;
 }
 
 .h-tl-tick {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 7px;
   width: 100%;
-  padding: 13px 2px 2px;
+  padding: 3px 4px;
   border: 0;
   background: none;
   color: var(--muted);
-  font: 0.86rem var(--serif);
+  font: 0.88rem var(--serif);
   font-variant-numeric: lining-nums tabular-nums;
+  text-align: left;
   white-space: nowrap;
   cursor: pointer;
 }
 
+/* Chấm nhỏ của từng mốc, nằm trên đường dọc */
 .h-tl-tick__dot {
+  position: absolute;
+  left: calc(var(--line-x) - (var(--line-x) * 2 + 14px));
+  top: 50%;
   width: 9px;
   height: 9px;
   border-radius: 50%;
   background: var(--paper);
   border: 2px solid rgb(var(--navy-rgb) / 0.35);
+  transform: translate(-50%, -50%);
   transition: background-color 300ms, border-color 300ms, transform 200ms;
 }
 
 .h-tl-tick:hover .h-tl-tick__dot {
-  transform: scale(1.3);
+  transform: translate(-50%, -50%) scale(1.3);
 }
 
-.h-tl-era.is-past .h-tl-tick__dot,
-.h-tl-era.is-active .h-tl-tick__dot {
+.h-tl-era.is-past .h-tl-tick__dot {
   background: var(--burgundy);
   border-color: var(--burgundy);
 }
@@ -1151,6 +1205,22 @@
   outline: 2px solid var(--burgundy);
   outline-offset: -2px;
   border-radius: 6px;
+}
+
+/* Màn hình hẹp: sách chiếm hết bề ngang, thanh mốc dọc xuống ngay dưới sách */
+@media (max-width: 760px) {
+  .h-book-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .h-timeline {
+    order: 2;
+    padding: 8px 4px 0;
+  }
+
+  .h-tl-era {
+    flex: none;
+  }
 }
 
 /* ---------- Trường cũ / trường mới ---------- */
@@ -1427,43 +1497,6 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* ---------- Nút tự chạy ---------- */
-
-.h-autoplay {
-  position: fixed;
-  right: 16px;
-  bottom: calc(var(--bar-height) + env(safe-area-inset-bottom) + 14px);
-  z-index: 9;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid rgb(var(--navy-rgb) / 0.25);
-  border-radius: 999px;
-  background: rgb(var(--beige-rgb) / 0.92);
-  backdrop-filter: blur(6px);
-  color: var(--navy);
-  font: 500 0.95rem var(--serif);
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgb(var(--navy-rgb) / 0.12);
-}
-
-.h-autoplay__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgb(var(--navy-rgb) / 0.35);
-}
-
-.h-autoplay.is-on .h-autoplay__dot {
-  background: var(--burgundy);
-  animation: h-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes h-pulse {
-  50% { box-shadow: 0 0 0 5px rgb(var(--burg-rgb) / 0.18); }
-}
-
 /* ---------- Màn hình hẹp ---------- */
 
 @media (max-width: 760px) {
@@ -1595,4 +1628,22 @@
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
+}
+
+/* ---------- Theo bản thiết kế: tiêu đề Cochin nghiêng, màu cam ---------- */
+
+.h-section__title,
+.h-video__title {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.h-section__title {
+  color: var(--burgundy);
+}
+
+.h-stat__label {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
 }

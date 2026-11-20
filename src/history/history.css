@@ -1,3 +1,7 @@
+/* Font chữ đọc Charis SIL (bản mở của Charter, đủ dấu tiếng Việt), nạp ngay tại đây
+   để thư mục src/history tự đủ, không phụ thuộc thẻ <link> trong index.html. */
+@import url('https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 /* ===== Trang Lịch sử =====
    Bảng màu "bản 2": nền kem, tiêu đề đỏ cam / cam, chữ nâu đỏ và mực đậm. */
 

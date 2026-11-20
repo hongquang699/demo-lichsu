@@ -91,6 +91,10 @@ function Cover() {
 
 const left = (i: number) => <LeftPage key={`l${i}`} era={ERAS[i]} index={i} />;
 const right = (i: number) => <RightPage key={`r${i}`} era={ERAS[i]} index={i} />;
+/** Trên điện thoại mỗi giai đoạn là hai trang liền nhau: trang chẵn là ảnh, trang lẻ là hiệu trưởng và bối cảnh. */
+const face = (v: number) => (v % 2 ? right(v >> 1) : left(v >> 1));
+/** Mặt sau tờ giấy trên điện thoại: giấy trắng. */
+const blank = <div className="h-page h-page--blank" />;
 
 /* ---------- Cuốn sách ---------- */
 
@@ -180,13 +184,17 @@ export function Book({ page, onPage }: BookProps) {
   const [stageRef, inView] = useInView<HTMLElement>(0.45);
   const [sceneRef, visible] = useVisible<HTMLDivElement>(0.5);
   const single = useMediaQuery('(max-width: 760px)');
+  // Máy tính: một mặt sách (hai trang) là một giai đoạn. Điện thoại: mỗi lần chỉ một trang, một giai đoạn có hai trang.
+  const per = single ? 2 : 1;
+  const lastView = (LAST + 1) * per - 1;
   const [phase, setPhase] = useState<Phase>('closed');
-  const [shown, setShown] = useState(page);
+  const [target, setTarget] = useState(page * per); // trang cần tới
+  const [shown, setShown] = useState(page * per); // trang đang nằm yên trên sách
   const [flip, setFlip] = useState<Flip | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hold, setHold] = useState(false); // chuột đang đặt trên sách hoặc sách đang được chọn bằng bàn phím
   const [nudge, setNudge] = useState(0); // tăng mỗi lần người dùng chạm vào sách để đếm lại từ đầu
-  const pointer = useRef<{ x: number; id: number; w: number } | null>(null);
+  const pointer = useRef<{ x: number; id: number; w: number; left: number } | null>(null);
 
   // Lướt tới sách thì sách tự mở ra trang đầu
   useEffect(() => {
@@ -199,24 +207,45 @@ export function Book({ page, onPage }: BookProps) {
     return () => window.clearTimeout(t);
   }, [inView, phase]);
 
+  // Đổi giữa máy tính và điện thoại: đặt lại sách ở đầu giai đoạn đang xem
+  useEffect(() => {
+    setFlip(null);
+    setDrag(null);
+    setTarget(page * per);
+    setShown(page * per);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [per]);
+
+  // Chọn giai đoạn từ thanh mốc: tới trang đầu của giai đoạn đó
+  useEffect(() => {
+    if (Math.floor(target / per) !== page) setTarget(page * per);
+  }, [page, target, per]);
+
   // Trang đích thay đổi (nút, thanh mốc, tự giở) -> lật từ trang đang hiện sang trang đích
   useEffect(() => {
-    if (single || phase !== 'open' || flip || drag || page === shown) return;
+    if (phase !== 'open' || flip || drag || target === shown) return;
     if (prefersReducedMotion()) {
-      setShown(page);
+      setShown(target);
       return;
     }
-    setFlip({ from: shown, to: page, dir: page > shown ? 1 : -1 });
-  }, [page, shown, phase, flip, drag, single]);
+    setFlip({ from: shown, to: target, dir: target > shown ? 1 : -1 });
+  }, [target, shown, phase, flip, drag]);
+
+  const step = (d: 1 | -1) => {
+    const next = Math.min(lastView, Math.max(0, target + d));
+    setTarget(next);
+    onPage(Math.floor(next / per));
+  };
 
   // Tự giở trang: chỉ chạy khi sách đang hiện trên màn hình, đứng yên và người dùng không đặt tay lên sách
   const autoRunning =
-    visible && !hold && phase === 'open' && !flip && !drag && page === shown && page < LAST && !prefersReducedMotion();
+    visible && !hold && phase === 'open' && !flip && !drag && target === shown && target < lastView && !prefersReducedMotion();
   useEffect(() => {
     if (!autoRunning) return;
-    const t = window.setTimeout(() => onPage(page + 1), AUTO_MS);
+    const t = window.setTimeout(() => step(1), AUTO_MS);
     return () => window.clearTimeout(t);
-  }, [autoRunning, page, nudge, onPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunning, target, nudge]);
 
   const finishFlip = () => {
     if (!flip) return;
@@ -226,29 +255,29 @@ export function Book({ page, onPage }: BookProps) {
 
   const go = (d: 1 | -1) => {
     setNudge((n) => n + 1);
-    const next = Math.min(LAST, Math.max(0, page + d));
     if (phase !== 'open') {
       setPhase('open');
       return;
     }
-    if (next !== page) onPage(next);
+    step(d);
   };
 
   /* Kéo mép trang: tờ giấy đi theo tay, buông ra thì lật nốt hoặc rơi về chỗ cũ */
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    pointer.current = { x: e.clientX, id: e.pointerId, w: e.currentTarget.getBoundingClientRect().width };
+    const r = e.currentTarget.getBoundingClientRect();
+    pointer.current = { x: e.clientX, id: e.pointerId, w: r.width, left: r.left };
     setNudge((n) => n + 1);
   };
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const s = pointer.current;
-    if (!s || single || phase !== 'open' || flip) return;
+    if (!s || phase !== 'open' || flip) return;
     const dx = e.clientX - s.x;
     if (!drag) {
       if (Math.abs(dx) < 12) return;
       const dir: 1 | -1 = dx < 0 ? 1 : -1;
       const to = shown + dir;
-      if (to < 0 || to > LAST || page !== shown) {
+      if (to < 0 || to > lastView || target !== shown) {
         pointer.current = null;
         return;
       }
@@ -261,23 +290,27 @@ export function Book({ page, onPage }: BookProps) {
       return;
     }
     if (drag.release !== undefined) return;
-    // Kéo được chừng 80% bề ngang cuốn sách là tờ giấy lật hẳn sang bên kia
-    const p = Math.min(1, Math.max(0, (-dx * drag.dir) / (s.w * 0.8)));
+    const clamp = (x: number) => Math.min(1, Math.max(0, x));
+    const a = clamp((-dx * drag.dir) / (s.w * (single ? 0.95 : 0.8)));
+    // Máy tính: kéo được chừng 80% bề ngang cuốn sách là tờ giấy lật hẳn sang bên kia.
+    // Điện thoại: góc lật tính sao cho mép giấy nằm dưới ngón tay (tờ giấy quay quanh gáy trái, bề ngang nhìn thấy là cos góc).
+    // Lật tới thì tính theo quãng đã vuốt; lật lui thì trang trước đi vào từ ngoài màn hình nên đặt mép ngay chỗ ngón tay.
+    let p = a;
+    if (single) {
+      const u = Math.min(1, Math.max(-1, (e.clientX - s.left) / s.w));
+      p = drag.dir === 1 ? Math.acos(1 - a) / Math.PI : clamp(1 - Math.acos(u) / Math.PI);
+    }
     setDrag({ ...drag, p });
   };
   const releaseDrag = (complete: boolean) => {
     if (drag && drag.release === undefined) setDrag({ ...drag, release: complete ? 1 : 0 });
   };
-  const onPointerUp = (e: React.PointerEvent) => {
+  const onPointerUp = () => {
     const s = pointer.current;
     pointer.current = null;
     if (!s) return;
-    if (drag) {
-      releaseDrag(drag.p > 0.3);
-      return;
-    }
-    const dx = e.clientX - s.x;
-    if (single && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    // Điện thoại lật lui: mép trang trước phải qua chừng 1/4 bề ngang trang mới lật hẳn về
+    if (drag) releaseDrag(drag.p > (!single ? 0.3 : drag.dir === 1 ? 0.25 : 0.58));
   };
   const onPointerCancel = () => {
     pointer.current = null;
@@ -287,7 +320,8 @@ export function Book({ page, onPage }: BookProps) {
     if (!drag || drag.release === undefined) return;
     if (drag.release === 1) {
       setShown(drag.to);
-      onPage(drag.to);
+      setTarget(drag.to);
+      onPage(Math.floor(drag.to / per));
     }
     setDrag(null);
   };
@@ -307,21 +341,65 @@ export function Book({ page, onPage }: BookProps) {
   let content: ReactNode;
 
   if (single) {
-    // Màn hình hẹp: một trang dọc, chuyển trang bằng hiệu ứng lật nhẹ
-    content =
-      phase === 'open' ? (
-        <div className="h-sheet h-sheet--single h-turn" key={page} data-dir={page >= shown ? 1 : -1} onAnimationEnd={own(() => setShown(page))}>
-          {left(page)}
-          {right(page)}
-        </div>
-      ) : (
-        <div
-          className={`h-sheet h-sheet--single h-sheet--cover${phase === 'opening' ? ' is-opening' : ''}`}
-          onAnimationEnd={own(() => setPhase('open'))}
-        >
-          <Cover />
-        </div>
+    /* Điện thoại: sách mở một trang cao gần hết màn hình, gáy ở mép trái.
+       Lật tới: trang đang xem cong lên rồi lật qua gáy ra ngoài màn hình, lộ trang sau nằm bên dưới.
+       Lật lui: trang trước từ ngoài mép trái lật về phủ lên trang đang xem. */
+    const sheet = (v: number) => <div className="h-sheet h-sheet--single">{face(v)}</div>;
+    if (phase !== 'open') {
+      content = (
+        <>
+          {sheet(0)}
+          <TurningLeaf
+            dir={1}
+            faces="m-cover"
+            className={phase === 'opening' ? 'is-auto is-cover' : ''}
+            front={<Cover />}
+            back={blank}
+            onEnd={() => setPhase('open')}
+          />
+        </>
       );
+    } else if (flip || drag) {
+      const f = (drag ?? flip) as Flip;
+      const fwd = f.dir === 1;
+      const top = fwd ? f.from : f.to; // trang nằm trên tờ giấy đang lật
+      // Tờ giấy luôn quay quanh gáy trái: --p = 0 là nằm trên sách, 1 là đã lật hẳn ra ngoài.
+      // Lật lui thì tờ đi ngược (1 -> 0), nên đổi tiến độ kéo tay sang góc của tờ.
+      const leafP = (x: number) => (fwd ? x : 1 - x);
+      let className: string;
+      let style: CSSProperties | undefined;
+      if (drag && drag.release === undefined) {
+        className = `is-dragging${fwd ? '' : ' is-rev'}`;
+        style = { '--p': leafP(drag.p) } as CSSProperties;
+      } else if (drag) {
+        const from = leafP(drag.p);
+        const to = leafP(drag.release === 1 ? 1 : 0);
+        const ms = Math.round(600 + 1000 * Math.abs(to - from));
+        className = `is-release ${to === 1 ? 'is-done' : 'is-back'}${fwd ? '' : ' is-rev'}`;
+        style = { '--from': from, '--to': to, '--release-ms': `${ms}ms` } as CSSProperties;
+      } else if (fwd) {
+        className = 'is-auto';
+      } else {
+        className = 'is-release is-back';
+        style = { '--from': 1, '--to': 0, '--release-ms': 'var(--flip-ms)' } as CSSProperties;
+      }
+      content = (
+        <>
+          {sheet(fwd ? f.to : f.from)}
+          <TurningLeaf
+            dir={1}
+            faces={`m${top}`}
+            className={className}
+            style={style}
+            front={face(top)}
+            back={blank}
+            onEnd={drag ? endDrag : finishFlip}
+          />
+        </>
+      );
+    } else {
+      content = sheet(shown);
+    }
   } else if (phase !== 'open') {
     content = (
       <>
@@ -409,19 +487,19 @@ export function Book({ page, onPage }: BookProps) {
           </div>
 
           <div className="h-book-nav">
-            <button type="button" className="h-arrow" onClick={() => go(-1)} disabled={phase === 'open' && page === 0} aria-label="Trang trước">
+            <button type="button" className="h-arrow" onClick={() => go(-1)} disabled={phase === 'open' && target === 0} aria-label="Trang trước">
               <Chevron dir="left" />
             </button>
             <div className="h-book-nav__mid">
               <p className="h-book-nav__hint">
-                {phase !== 'open' ? 'Đang mở sách…' : single ? 'Vuốt ngang để lật trang' : 'Kéo mép trang để lật'}
+                {phase !== 'open' ? 'Đang mở sách…' : single ? 'Vuốt trang sang trái để lật' : 'Kéo mép trang để lật'}
               </p>
               {/* Vạch đếm giờ tới lần tự giở trang kế tiếp */}
               <span className="h-autoflip" aria-hidden="true">
                 <span key={`${page}-${nudge}`} className={`h-autoflip__fill${autoRunning ? ' is-running' : ''}`} />
               </span>
             </div>
-            <button type="button" className="h-arrow" onClick={() => go(1)} disabled={page === LAST} aria-label="Trang sau">
+            <button type="button" className="h-arrow" onClick={() => go(1)} disabled={phase === 'open' && target === lastView} aria-label="Trang sau">
               <Chevron dir="right" />
             </button>
           </div>

@@ -549,6 +549,15 @@
   animation: var(--release-ms, 900ms) cubic-bezier(0.3, 0.1, 0.25, 1) forwards;
 }
 
+/* Điện thoại, lật lui: tờ giấy đi ngược chiều nên mép ngoài vẫn đi trước theo tay thì phải cong về phía ngược lại */
+.h-turning.is-dragging.is-rev {
+  --bend: calc(sin(var(--p) * 180deg) * -44deg - sin(var(--p) * 180deg) * var(--wave));
+}
+
+.h-turning.is-release.is-rev {
+  --bend-from: calc(sin(var(--from) * 180deg) * -44deg);
+}
+
 .h-turning.is-release.is-done {
   animation-name: h-turn-done;
 }
@@ -1813,10 +1822,18 @@
     margin-inline: 0;
   }
 
+  /* Sách một trang: rộng hết cột, cao gần hết màn hình (chừa chỗ cho nút lật bên dưới).
+     Tờ giấy lật qua gáy trái ra ngoài màn hình nên cắt phần tràn, chỉ chừa mép cho bóng giấy. */
+  .h-book-scene {
+    overflow: clip;
+    overflow-clip-margin: 16px;
+  }
+
   .h-book {
     --tilt: 0deg;
+    --flip-ms: 1300ms;
     display: block;
-    height: auto;
+    height: clamp(440px, calc(var(--view) - 150px), 720px);
     cursor: default;
   }
 
@@ -1824,58 +1841,73 @@
     transform: none;
   }
 
+  .h-book.is-single > .h-sheet {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Gáy ở mép trái, các tờ giấy xếp chồng lộ ra ở mép phải và mép dưới */
   .h-sheet--single {
-    border-radius: 6px;
-    box-shadow: 0 2px 0 var(--paper-edge), 0 4px 0 var(--paper-edge-2), 0 6px 0 var(--paper-edge-3), 0 10px 18px rgb(var(--shade-rgb) / 0.2);
+    border-radius: 0 6px 6px 0;
+    box-shadow:
+      inset 22px 0 26px -22px rgb(var(--shade-rgb) / 0.45),
+      2px 2px 0 var(--paper-edge),
+      4px 4px 0 var(--paper-edge-2),
+      6px 6px 0 var(--paper-edge-3),
+      6px 10px 16px rgb(var(--shade-rgb) / 0.22);
   }
 
-  .h-sheet--single .h-page {
-    position: relative;
-    inset: auto;
-    padding: 20px 20px 8px;
+  .h-book.is-single .h-leaf--right {
+    left: 0;
+    width: 100%;
   }
 
-  .h-sheet--single .h-page--right {
-    padding-bottom: 20px;
+  /* Trang điện thoại rộng gấp đôi một nửa sách máy tính: cong ít hơn để mép giấy không vượt xa ngón tay */
+  .h-book.is-single .h-turning.is-dragging {
+    --bend: calc(sin(var(--p) * 180deg) * 26deg + sin(var(--p) * 180deg) * var(--wave));
   }
 
-  .h-sheet--single .h-page__running--right,
-  .h-sheet--single .h-page__folio {
+  .h-book.is-single .h-turning.is-dragging.is-rev {
+    --bend: calc(sin(var(--p) * 180deg) * -26deg - sin(var(--p) * 180deg) * var(--wave));
+  }
+
+  .h-book.is-single .h-turning.is-release {
+    --bend-from: calc(sin(var(--from) * 180deg) * 26deg);
+  }
+
+  .h-book.is-single .h-turning.is-release.is-rev {
+    --bend-from: calc(sin(var(--from) * 180deg) * -26deg);
+  }
+
+  .h-book.is-single .h-cast {
+    left: 0;
+    width: 100%;
+  }
+
+  /* Phía bên kia gáy nằm ngoài màn hình: không có trang nào để đổ bóng xuống */
+  .h-book.is-single .h-cast--land-left {
     display: none;
   }
 
-  .h-sheet--single .h-zoom {
-    aspect-ratio: 4 / 3;
+  /* Trang cao hơn màn hình (máy nhỏ) thì cuộn dọc trong trang */
+  .h-book.is-single .h-page {
+    padding: 18px 20px 40px 26px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
-  .h-sheet--single .h-page__summary {
+  .h-book.is-single .h-page__summary {
     overflow: visible;
     mask-image: none;
   }
 
-  .h-sheet--cover {
-    aspect-ratio: 3 / 4;
-    max-height: 66vh;
-    margin: 0 auto;
-    transform-origin: 0 50%;
+  .h-book.is-single .h-page--right .h-page__folio {
+    right: 20px;
   }
 
-  .h-sheet--cover .h-cover {
-    border-radius: 6px;
-  }
-
-  .h-sheet--cover.is-opening {
-    animation: h-cover-open 1000ms cubic-bezier(0.45, 0.05, 0.3, 1) forwards;
-  }
-
-  .h-turn {
-    transform-origin: 0 50%;
-    animation: h-turn-in 1000ms cubic-bezier(0.3, 0.1, 0.2, 1);
-  }
-
-  .h-turn[data-dir='-1'] {
-    transform-origin: 100% 50%;
-    animation-name: h-turn-in-back;
+  .h-book.is-single .h-page--left .h-page__folio {
+    left: auto;
+    right: 20px;
   }
 
   .h-leaders__row {
@@ -1894,18 +1926,6 @@
   .h-leader__name {
     font-size: 0.98rem;
   }
-}
-
-@keyframes h-cover-open {
-  to { transform: perspective(1400px) rotateY(-100deg); opacity: 0; }
-}
-
-@keyframes h-turn-in {
-  from { transform: perspective(1400px) rotateY(-14deg); opacity: 0; }
-}
-
-@keyframes h-turn-in-back {
-  from { transform: perspective(1400px) rotateY(14deg); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

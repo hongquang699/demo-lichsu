@@ -710,8 +710,24 @@
   background: var(--paper);
 }
 
-/* Cả trang đặt trong từng dải, dịch sang trái để dải chỉ thấy đúng phần của mình */
+/* Các dải phủ chồng lên nhau 1.5px để không lộ khe sáng dọc ở chỗ nối (khử răng cưa ở mép mặt phẳng 3D).
+   Phần tràn ra là chính nội dung trang ở dải bên cạnh nên chỗ nối vẫn liền. */
+.h-leaf .h-seg > .h-leaf__face {
+  overflow: clip;
+  overflow-clip-margin: 1.5px;
+}
+
+/* Cả trang đặt trong từng dải, dịch sang trái để dải chỉ thấy đúng phần của mình.
+   Các biến chuyển động được đặt cố định ở đây để nội dung trang bên trong không phải tính lại kiểu mỗi khung hình. */
 .h-seg__in {
+  --p: 0;
+  --bend: 0deg;
+  --wave: 0deg;
+  --lift: 0;
+  --a: 0deg;
+  --a2: 0deg;
+  --i: 0;
+  /* Không dùng contain ở đây: nó làm lộ lại vệt dọc ở chỗ nối các dải */
   position: absolute;
   top: 0;
   left: calc(var(--o) * -100%);
@@ -725,12 +741,17 @@
 /* Sáng tối theo góc nghiêng thực của từng dải: nằm phẳng thì sáng, càng dựng đứng càng tối.
    Chuyển dần từ góc của dải này sang dải kế nên mặt giấy liền một mảng cong. */
 .h-leaf .h-seg > .h-leaf__face::after {
+  inset: -1.5px; /* phủ cả phần chồng mép, nếu không chỗ nối sẽ sáng hơn */
   z-index: 1;
   opacity: 1;
+  /* 5 điểm màu mỗi dải: bóng đổi đều theo đường cong, không thành nếp gấp ở chỗ nối hai dải */
   background: linear-gradient(
     var(--shade-dir, 90deg),
-    rgb(var(--shade-rgb) / calc(sin(var(--a)) * sin(var(--a)) * 0.46)),
-    rgb(var(--shade-rgb) / calc(sin(var(--a2)) * sin(var(--a2)) * 0.46))
+    rgb(var(--shade-rgb) / calc(sin(var(--a) + (var(--a2) - var(--a)) * 0 / 4) * sin(var(--a) + (var(--a2) - var(--a)) * 0 / 4) * 0.46)),
+    rgb(var(--shade-rgb) / calc(sin(var(--a) + (var(--a2) - var(--a)) * 1 / 4) * sin(var(--a) + (var(--a2) - var(--a)) * 1 / 4) * 0.46)),
+    rgb(var(--shade-rgb) / calc(sin(var(--a) + (var(--a2) - var(--a)) * 2 / 4) * sin(var(--a) + (var(--a2) - var(--a)) * 2 / 4) * 0.46)),
+    rgb(var(--shade-rgb) / calc(sin(var(--a) + (var(--a2) - var(--a)) * 3 / 4) * sin(var(--a) + (var(--a2) - var(--a)) * 3 / 4) * 0.46)),
+    rgb(var(--shade-rgb) / calc(sin(var(--a) + (var(--a2) - var(--a)) * 4 / 4) * sin(var(--a) + (var(--a2) - var(--a)) * 4 / 4) * 0.46))
   );
 }
 

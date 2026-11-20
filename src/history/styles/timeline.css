@@ -1,0 +1,193 @@
+/* ---------- Thanh mốc thời gian: dọc bên trái sách, đi từ trên xuống ---------- */
+
+.h-book-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+  align-items: stretch;
+}
+
+.h-book-main {
+  min-width: 0;
+}
+
+.h-timeline {
+  --line-x: 8px;   /* vị trí đường dọc tính từ mép trái */
+  --line: rgb(var(--navy-rgb) / 0.16);
+  position: relative;
+  padding: 8px 0 52px; /* chừa chỗ ngang hàng nút lật trang bên dưới sách */
+}
+
+.h-timeline__eras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.h-tl-era {
+  position: relative;
+  flex: 1 1 auto;
+  padding-left: calc(var(--line-x) * 2 + 14px);
+}
+
+/* Đoạn đường dọc của từng giai đoạn: nối liền nhau thành một thanh */
+.h-tl-era::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--line-x) - 1.5px);
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--line);
+  transition: background 500ms var(--ease-out);
+}
+
+.h-tl-era:first-child::before {
+  top: 15px;
+  border-radius: 3px 3px 0 0;
+}
+
+.h-tl-era:last-child::before {
+  border-radius: 0 0 3px 3px;
+}
+
+.h-tl-era.is-past::before {
+  background: var(--burgundy);
+}
+
+/* Giai đoạn đang xem: tô tới điểm mốc của nó rồi nhạt dần */
+.h-tl-era.is-active::before {
+  background: linear-gradient(180deg, var(--burgundy) 0 15px, var(--line) 15px);
+}
+
+.h-tl-era__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  margin-left: -10px;
+  padding: 0 12px 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--navy);
+  font: 600 1rem var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 200ms, background-color 200ms;
+}
+
+.h-tl-era__btn:hover {
+  background: rgb(var(--beige-rgb) / 0.6);
+}
+
+.h-tl-era.is-active .h-tl-era__btn {
+  background: var(--burgundy);
+  color: var(--cream);
+}
+
+/* Điểm mốc lớn trên đường dọc, ngang hàng tên giai đoạn */
+.h-tl-era__dot {
+  position: absolute;
+  left: calc(var(--line-x) - (var(--line-x) * 2 + 14px) + 10px);
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 3px solid rgb(var(--navy-rgb) / 0.3);
+  transform: translate(-50%, -50%);
+  transition: border-color 300ms, box-shadow 300ms, background-color 300ms;
+}
+
+.h-tl-era.is-past .h-tl-era__dot {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+}
+
+.h-tl-era.is-active .h-tl-era__dot {
+  width: 18px;
+  height: 18px;
+  border: 4px solid var(--burgundy);
+  background: var(--paper);
+  box-shadow: 0 0 0 5px rgb(var(--burg-rgb) / 0.16);
+}
+
+.h-tl-era__ticks {
+  list-style: none;
+  margin: 2px 0 10px;
+  padding: 0;
+}
+
+.h-tl-tick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 3px 4px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 0.88rem var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Chấm nhỏ của từng mốc, nằm trên đường dọc */
+.h-tl-tick__dot {
+  position: absolute;
+  left: calc(var(--line-x) - (var(--line-x) * 2 + 14px));
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid rgb(var(--navy-rgb) / 0.35);
+  transform: translate(-50%, -50%);
+  transition: background-color 300ms, border-color 300ms, transform 200ms;
+}
+
+.h-tl-tick:hover .h-tl-tick__dot {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.h-tl-era.is-past .h-tl-tick__dot {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+}
+
+.h-tl-era.is-active .h-tl-tick {
+  color: var(--burgundy);
+  font-weight: 600;
+}
+
+.h-tl-era__btn:focus-visible,
+.h-tl-tick:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* Màn hình hẹp: sách chiếm hết bề ngang, thanh mốc dọc xuống ngay dưới sách */
+@media (max-width: 760px) {
+  .h-book-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .h-timeline {
+    order: 2;
+    padding: 8px 4px 0;
+  }
+
+  .h-tl-era {
+    flex: none;
+  }
+}

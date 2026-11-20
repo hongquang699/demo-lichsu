@@ -1,0 +1,168 @@
+/* ---------- Màn hình hẹp ---------- */
+
+@media (max-width: 760px) {
+  .page.page--history {
+    padding-inline: 16px;
+  }
+
+  .h-section,
+  .h-book-stage {
+    margin-top: 80px;
+  }
+
+  .h-video {
+    height: min(calc(var(--view) - 120px), 560px);
+  }
+
+  .h-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 28px;
+  }
+
+  .h-stat:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .h-book-stage {
+    padding: 8px 0 0;
+    margin-inline: 0;
+  }
+
+  /* Sách một trang: rộng hết cột, cao gần hết màn hình (chừa chỗ cho nút lật bên dưới).
+     Tờ giấy lật qua gáy trái ra ngoài màn hình nên cắt phần tràn, chỉ chừa mép cho bóng giấy. */
+  .h-book-scene {
+    overflow: clip;
+    overflow-clip-margin: 16px;
+  }
+
+  .h-book {
+    --tilt: 0deg;
+    --flip-ms: 1300ms;
+    display: block;
+    height: clamp(440px, calc(var(--view) - 150px), 720px);
+    cursor: default;
+  }
+
+  .h-book.is-closed {
+    transform: none;
+  }
+
+  .h-book.is-single > .h-sheet {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Gáy ở mép trái, các tờ giấy xếp chồng lộ ra ở mép phải và mép dưới */
+  .h-sheet--single {
+    border-radius: 0 5px 5px 0;
+    background:
+      linear-gradient(270deg, transparent 30%, rgb(255 253 246 / 0.35) 70%, transparent 94%, rgb(var(--shade-rgb) / 0.1)),
+      var(--paper-bg);
+    box-shadow:
+      inset 22px 0 26px -22px rgb(var(--shade-rgb) / 0.5),
+      1.5px 1.5px 0 var(--paper-edge),
+      3px 3px 0 var(--paper),
+      4.5px 4.5px 0 var(--paper-edge-2),
+      6px 6px 0 var(--paper-edge-3),
+      6px 10px 16px rgb(var(--dark-rgb) / 0.2);
+  }
+
+  /* Một trang: chỉ còn bìa phía sau trang, gáy sát mép trái */
+  .h-book.is-single .h-book__board--left {
+    display: none;
+  }
+
+  .h-book.is-single .h-book__board--right {
+    left: -3px;
+    right: -11px;
+    top: -8px;
+    bottom: -11px;
+    width: auto;
+    border-radius: 3px 8px 8px 3px;
+  }
+
+  .h-book-shadow {
+    margin-top: -10px;
+  }
+
+  .h-book.is-single .h-leaf--right {
+    left: 0;
+    width: 100%;
+  }
+
+  /* Trang điện thoại rộng gấp đôi một nửa sách máy tính: cong ít hơn để mép giấy không vượt xa ngón tay */
+  .h-book.is-single .h-turning.is-dragging {
+    --bend: calc(sin(var(--p) * 180deg) * 26deg + sin(var(--p) * 180deg) * var(--wave));
+  }
+
+  .h-book.is-single .h-turning.is-dragging.is-rev {
+    --bend: calc(sin(var(--p) * 180deg) * -26deg - sin(var(--p) * 180deg) * var(--wave));
+  }
+
+  .h-book.is-single .h-turning.is-release {
+    --bend-from: calc(sin(var(--from) * 180deg) * 26deg);
+  }
+
+  .h-book.is-single .h-turning.is-release.is-rev {
+    --bend-from: calc(sin(var(--from) * 180deg) * -26deg);
+  }
+
+  .h-book.is-single .h-cast {
+    left: 0;
+    width: 100%;
+  }
+
+  /* Phía bên kia gáy nằm ngoài màn hình: không có trang nào để đổ bóng xuống */
+  .h-book.is-single .h-cast--land-left {
+    display: none;
+  }
+
+  /* Trang cao hơn màn hình (máy nhỏ) thì cuộn dọc trong trang */
+  .h-book.is-single .h-page {
+    padding: 18px 20px 40px 26px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .h-book.is-single .h-page__summary {
+    overflow: visible;
+    mask-image: none;
+  }
+
+  .h-book.is-single .h-page--right .h-page__folio {
+    right: 20px;
+  }
+
+  .h-book.is-single .h-page--left .h-page__folio {
+    left: auto;
+    right: 20px;
+  }
+
+  .h-leaders__row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'main main' 'a b';
+    align-items: start;
+    row-gap: 28px;
+  }
+
+  .h-leader--main {
+    grid-area: main;
+    width: min(220px, 64%);
+    margin: 0 auto;
+  }
+
+  .h-leader__name {
+    font-size: 0.98rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history *,
+  .history *::before,
+  .history *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

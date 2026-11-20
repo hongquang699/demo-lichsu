@@ -1,0 +1,90 @@
+/* ---------- Trường cũ / trường mới ---------- */
+
+.h-compare__box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(var(--view) - 200px);
+  min-height: 260px;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: ew-resize;
+}
+
+.h-compare__img,
+.h-compare__clip {
+  position: absolute;
+  inset: 0;
+}
+
+.h-compare__clip .h-photo {
+  filter: grayscale(0.75) sepia(0.35) contrast(1.05);
+}
+
+.h-compare__tag {
+  position: absolute;
+  bottom: 16px;
+  padding: 5px 14px;
+  border-radius: 2px;
+  background: rgb(var(--dark-rgb) / 0.66);
+  color: var(--beige);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.h-compare__tag--old { left: 16px; }
+.h-compare__tag--new { right: 16px; }
+
+.h-compare__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--cream);
+  box-shadow: 0 0 10px rgb(var(--dark-rgb) / 0.35);
+  pointer-events: none;
+}
+
+.h-compare__knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--burgundy);
+  color: var(--beige);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px var(--cream), 0 4px 12px rgb(var(--dark-rgb) / 0.3);
+  transition: transform 200ms var(--ease-out);
+}
+
+.h-compare__knob .h-chevron {
+  width: 14px;
+  height: 14px;
+}
+
+.h-compare__box:active .h-compare__knob {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Thanh trượt ẩn để dùng bàn phím */
+.h-compare__range {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.h-compare__box:has(.h-compare__range:focus-visible) .h-compare__knob {
+  box-shadow: 0 0 0 3px var(--cream), 0 0 0 6px var(--burgundy);
+}

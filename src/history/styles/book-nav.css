@@ -1,0 +1,88 @@
+/* Nút lật và gợi ý */
+.h-book-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.h-book-nav__mid {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 18ch;
+}
+
+.h-book-nav__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Vạch mảnh chạy dần tới lúc sách tự giở trang kế tiếp */
+.h-autoflip {
+  display: block;
+  width: 96px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(var(--burg-rgb) / 0.14);
+  overflow: hidden;
+}
+
+.h-autoflip__fill {
+  display: block;
+  height: 100%;
+  background: var(--burgundy);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+.h-autoflip__fill.is-running {
+  opacity: 1;
+  animation: h-autoflip 6500ms linear forwards;
+}
+
+@keyframes h-autoflip {
+  to { transform: scaleX(1); }
+}
+
+.h-arrow {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgb(var(--burg-rgb) / 0.35);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--beige-rgb) / 0.75);
+  color: var(--burgundy);
+  cursor: pointer;
+  transition: background-color 200ms, transform 150ms;
+}
+
+.h-arrow .h-chevron {
+  width: 18px;
+  height: 18px;
+}
+
+.h-arrow:hover:not(:disabled) {
+  background: var(--paper);
+}
+
+.h-arrow:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.h-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.h-arrow:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}

@@ -1,0 +1,16 @@
+/* ---------- Dự phòng cho trình duyệt cũ chưa có hàm sin() trong CSS (Safari < 15.4, Chrome < 111) ----------
+   Các biến tính bằng sin() sẽ không dùng được, kéo theo cả phép xoay của tờ giấy hỏng theo.
+   Ở đây thay bằng giá trị cố định: tờ giấy vẫn lật bình thường, chỉ không cong và không đổ bóng theo góc. */
+@supports not (width: calc(1px * sin(1deg))) {
+  .h-turning {
+    --lift: 0.5 !important;
+  }
+
+  .h-turning.is-dragging {
+    --bend: 0deg !important;
+  }
+
+  .h-turning.is-release {
+    --bend-from: 0deg !important;
+  }
+}

@@ -1,0 +1,121 @@
+/* ===== Trang Lịch sử =====
+   Bảng màu "bản 2": nền kem, tiêu đề đỏ cam / cam, chữ nâu đỏ và mực đậm. */
+
+/* Khi đang ở trang Lịch sử, nền trang và thanh chuyển trang cũng theo bảng màu này */
+:root:has(.page--history) {
+  --bg: #fdeedb;
+  --cream: #fdf6ec;
+  --burgundy: #d23c0c;
+  --navy: #1c1a3e;
+  --green: #85231c;
+  --beige-rgb: 253 238 219;
+  --navy-rgb: 28 26 62;
+  --shade-rgb: 120 52 20;
+  --dark-rgb: 40 18 16;
+  --serif: 'Charis SIL', 'Charter', 'Times New Roman', Times, serif;
+}
+
+.page.page--history {
+  /* Trang này không có thanh phát nhạc nên không chừa chỗ cho nó */
+  --bar-height: 0px;
+  /* Các phần tràn rộng, không khung: tối đa 1440px nội dung */
+  max-width: 1488px;
+  padding-inline: 24px;
+}
+
+.history {
+  /* Chữ theo bản thiết kế: Cochin nghiêng cho tiêu đề, Charter cho chữ đọc, Courier cho nhãn.
+     Charis SIL là bản mở của Charter (tải từ Google Fonts, đủ dấu tiếng Việt) nên mọi máy đều có.
+     Cochin không có bản web miễn phí: máy nào có sẵn (Mac) thì dùng, còn lại dùng Times New Roman. */
+  --display: 'Cochin', 'Times New Roman', Times, serif;
+  --serif: 'Charis SIL', 'Charter', 'Times New Roman', Times, serif;
+  --mono: 'Courier New', Courier, monospace;
+  /* Bảng màu "bản 2": nền kem, tiêu đề đỏ cam -> cam, chữ nâu đỏ.
+     Tên biến giữ như cũ để mọi phần trên trang đổi màu theo. */
+  --beige: #fdeedb;    /* nền kem */
+  --burgundy: #d23c0c; /* đỏ cam: tiêu đề, điểm nhấn, hoa văn */
+  --navy: #1c1a3e;     /* mực đậm: chữ thường */
+  --green: #85231c;    /* nâu đỏ: chữ phụ, chữ trên nút cam */
+  --beige-rgb: 253 238 219;
+  --burg-rgb: 210 60 12;
+  --navy-rgb: 28 26 62;
+  /* Bóng đổ: nâu cam; lớp phủ tối: nâu sẫm */
+  --shade-rgb: 120 52 20;
+  --dark-rgb: 40 18 16;
+  --paper: color-mix(in srgb, var(--beige) 55%, #fff);
+  --paper-edge: color-mix(in srgb, var(--beige) 90%, var(--burgundy));
+  --paper-edge-2: color-mix(in srgb, var(--beige) 84%, var(--burgundy));
+  --paper-edge-3: color-mix(in srgb, var(--beige) 78%, var(--burgundy));
+  --stage-mid: color-mix(in srgb, var(--beige) 90%, var(--burgundy));
+  --stage-deep: color-mix(in srgb, var(--beige) 80%, var(--burgundy));
+  --ink: color-mix(in srgb, var(--navy) 65%, var(--green));
+  --muted: color-mix(in srgb, var(--green) 88%, var(--beige));
+  /* Vân sợi giấy: nhiễu rất mịn, phủ lên mặt giấy */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.25 0 0 0 0 0.12 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  /* Mặt giấy cũ: vân sợi, mép ngả vàng nâu, lốm đốm ố nhẹ */
+  --paper-bg:
+    var(--grain),
+    radial-gradient(18% 14% at 86% 88%, rgb(var(--shade-rgb) / 0.05), transparent),
+    radial-gradient(12% 10% at 12% 16%, rgb(var(--shade-rgb) / 0.04), transparent),
+    radial-gradient(125% 115% at 50% 45%, transparent 62%, rgb(var(--shade-rgb) / 0.13)),
+    var(--paper);
+  /* Da bọc bìa: đỏ cam sẫm lại như da thuộc */
+  --leather: color-mix(in srgb, var(--burgundy) 62%, #2a0a04);
+  --leather-hi: color-mix(in srgb, var(--burgundy) 82%, #ffd9a0);
+  --gold: linear-gradient(170deg, #fbe7b0 0%, #e2b866 38%, #fff1c9 52%, #c9953f 70%, #f1d08a 100%);
+  --flip-ms: 1700ms;
+  /* Chiều cao màn hình còn lại khi trừ thanh phát nhạc */
+  --view: calc(100vh - var(--bar-height));
+  position: relative;
+  color: var(--navy);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  font-variant-numeric: lining-nums;
+}
+
+.history * {
+  scrollbar-color: rgb(var(--burg-rgb) / 0.35) transparent;
+}
+
+.h-fleuron {
+  display: block;
+  width: min(260px, 70%);
+  height: auto;
+  color: var(--burgundy);
+}
+
+.h-lotus,
+.h-chevron {
+  display: block;
+}
+
+/* Tiêu đề phần: chữ lớn căn giữa, hoa văn sen bên dưới */
+.h-head {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.h-section {
+  margin-top: 112px;
+  scroll-margin-top: 24px;
+}
+
+.h-section__title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--navy);
+  text-wrap: balance;
+}
+
+.h-section__lead {
+  margin: 16px auto 32px;
+  max-width: 60ch;
+  text-align: center;
+  font-style: italic;
+  color: var(--green);
+}

@@ -1,0 +1,17 @@
+/* ---------- Theo bản thiết kế: tiêu đề Cochin nghiêng, màu cam ---------- */
+
+.h-section__title,
+.h-video__title {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.h-section__title {
+  color: var(--burgundy);
+}
+
+.h-stat__label {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
+}

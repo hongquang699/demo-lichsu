@@ -1,0 +1,170 @@
+/* ---------- Ban giám hiệu ---------- */
+
+.h-periods {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 4px 2px 8px;
+  display: flex;
+  justify-content: safe center;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.h-periods > li {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Mũi tên nối các giai đoạn: ───► */
+.h-periods > li + li::before {
+  content: '';
+  width: clamp(22px, 4vw, 52px);
+  height: 2px;
+  margin: 0 2px 0 6px;
+  background: rgb(var(--navy-rgb) / 0.3);
+}
+
+.h-periods > li + li > .h-period {
+  position: relative;
+  margin-left: 8px;
+}
+
+.h-periods > li + li > .h-period::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  width: 7px;
+  height: 10px;
+  background: rgb(var(--navy-rgb) / 0.4);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transform: translateY(-50%);
+}
+
+.h-periods > li.is-past + li::before {
+  background: var(--burgundy);
+}
+
+.h-periods > li.is-past + li > .h-period::before {
+  background: var(--burgundy);
+}
+
+.h-period {
+  padding: 8px 16px;
+  border: 1.5px solid rgb(var(--navy-rgb) / 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font: 600 1rem var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms, border-color 200ms;
+}
+
+.h-period:hover {
+  border-color: var(--navy);
+}
+
+.h-period.is-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--cream);
+}
+
+.h-period:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}
+
+.h-leaders__board {
+  position: relative;
+  margin-top: 28px;
+  padding: clamp(28px, 4vw, 48px) 0 0;
+  overflow: hidden;
+}
+
+/* Năm của giai đoạn in chìm phía sau */
+.h-leaders__range {
+  position: absolute;
+  inset: 8px 0 auto;
+  margin: 0;
+  text-align: center;
+  font-family: var(--display);
+  font-size: clamp(3.5rem, 10vw, 6rem);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgb(var(--burg-rgb) / 0.07);
+  pointer-events: none;
+  animation: h-fade-in 600ms ease-out;
+}
+
+.h-leaders__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 250px) minmax(0, 330px) minmax(0, 250px);
+  justify-content: center;
+  align-items: end;
+  gap: clamp(16px, 4vw, 56px);
+}
+
+.h-leader {
+  margin: 0;
+  text-align: center;
+  animation: h-rise 550ms var(--ease-out) both;
+}
+
+.h-photo.h-leader__photo {
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border-radius: 50%;
+  border: 6px solid var(--paper);
+  outline: 1px solid var(--burgundy);
+  box-shadow: 0 10px 22px rgb(var(--shade-rgb) / 0.22);
+  filter: sepia(0.25);
+}
+
+.h-leader--main .h-photo.h-leader__photo {
+  border-width: 8px;
+  outline: 2px solid var(--burgundy);
+  outline-offset: 3px;
+  box-shadow: 0 14px 30px rgb(var(--shade-rgb) / 0.26);
+}
+
+.h-leader figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 18px;
+}
+
+.h-leader__role {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.h-leader--main .h-leader__role {
+  color: var(--burgundy);
+}
+
+.h-leader__name {
+  font-family: var(--display);
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.h-leader--main .h-leader__name {
+  font-size: 1.3rem;
+}
+
+.h-leader__term {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: lining-nums tabular-nums;
+}

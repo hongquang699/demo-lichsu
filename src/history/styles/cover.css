@@ -1,0 +1,75 @@
+/* Bìa sách: da đỏ đô, ảnh trường in chìm, khung chữ vàng */
+.h-cover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0 6px 6px 0;
+  /* Da thuộc: vân da, ánh nắng loang ở góc trên trái, mép sờn sẫm lại, rãnh bản lề sát gáy */
+  background:
+    var(--grain),
+    var(--grain),
+    radial-gradient(80% 65% at 22% 12%, rgb(255 222 170 / 0.3), transparent 62%),
+    radial-gradient(130% 120% at 50% 50%, transparent 58%, rgb(var(--dark-rgb) / 0.4)),
+    linear-gradient(90deg, rgb(var(--dark-rgb) / 0.45) 0, rgb(var(--dark-rgb) / 0.12) 12px, rgb(255 220 180 / 0.14) 16px, transparent 22px),
+    linear-gradient(160deg, var(--leather-hi), var(--leather) 70%);
+  background-size: 160px 160px, 97px 97px, auto, auto, auto, auto;
+  overflow: hidden;
+}
+
+.h-cover__art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  filter: grayscale(1) contrast(1.2);
+  mix-blend-mode: multiply;
+}
+
+/* Khung và chữ ép nhũ vàng */
+.h-cover__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 28px;
+  padding: 44px clamp(20px, 3vw, 36px);
+  border: 1.5px solid #e9c77c;
+  outline: 1px solid rgb(233 199 124 / 0.55);
+  outline-offset: 6px;
+  box-shadow: inset 0 1px 0 rgb(var(--dark-rgb) / 0.3), 0 1px 0 rgb(var(--dark-rgb) / 0.3);
+  text-align: center;
+  color: #f1d590;
+}
+
+.h-cover__over,
+.h-cover__years,
+.h-cover__name {
+  background: var(--gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgb(var(--dark-rgb) / 0.55));
+}
+
+.h-cover__over,
+.h-cover__years {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.h-cover__rule {
+  width: 22px;
+  height: auto;
+  opacity: 0.85;
+}
+
+.h-cover__name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-weight: 600;
+  line-height: 1.08;
+}

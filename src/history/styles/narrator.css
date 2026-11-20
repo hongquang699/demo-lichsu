@@ -1,0 +1,57 @@
+/* ---------- Nút nghe đọc: nổi ở góc dưới phải ---------- */
+
+.h-narrator {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 20;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.h-narrator__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 12px;
+  border: 1px solid rgb(var(--burg-rgb) / 0.35);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--burgundy);
+  font: 600 0.92rem var(--serif);
+  box-shadow: 0 6px 18px rgb(var(--dark-rgb) / 0.16);
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms, transform 150ms;
+}
+
+.h-narrator__btn:hover {
+  background: var(--paper);
+}
+
+.h-narrator__btn:active {
+  transform: scale(0.96);
+}
+
+.h-narrator__btn.is-on {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+  color: var(--cream);
+}
+
+.h-narrator__btn:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 3px;
+}
+
+.h-narrator__note {
+  max-width: 240px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--green);
+  font-size: 0.82rem;
+  box-shadow: 0 4px 12px rgb(var(--dark-rgb) / 0.12);
+}

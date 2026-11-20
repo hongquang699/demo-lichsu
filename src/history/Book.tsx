@@ -1,120 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ERAS, type Era } from './data';
+import { useEffect, useRef, useState } from 'react';
+import { desktopScene, phoneScene, type Drag, type Flip, type Phase } from './BookScenes';
+import { ERAS } from './data';
 import { prefersReducedMotion, useInView, useMediaQuery, useVisible } from './hooks';
-import { Chevron, Lotus } from './Ornament';
-import { PhotoView, ZoomablePhoto } from './Photo';
+import { Chevron } from './Ornament';
+import { Timeline } from './Timeline';
 
-/* ---------- Nội dung từng trang ---------- */
-
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-
-function LeftPage({ era, index }: { era: Era; index: number }) {
-  return (
-    <div className="h-page h-page--left">
-      <p className="h-page__running">Chương {ROMAN[index]} · {era.title}</p>
-      <p className="h-page__range">{era.range}</p>
-      <figure className="h-page__figure">
-        <ZoomablePhoto kind={era.photo.kind} src={era.photo.src} alt={era.photo.caption} caption={era.photo.caption} />
-        <figcaption>{era.photo.caption}</figcaption>
-      </figure>
-      <span className="h-page__folio">{index * 2 + 1}</span>
-    </div>
-  );
-}
-
-function RightPage({ era, index }: { era: Era; index: number }) {
-  const [tab, setTab] = useState(era.principals.length - 1);
-  const p = era.principals[tab] ?? era.principals[0];
-
-  return (
-    <div className="h-page h-page--right">
-      <p className="h-page__running h-page__running--right">Sử ký Trường THPT Chuyên Phan Bội Châu</p>
-      <div className="h-principal-card">
-        <div className="h-principal-card__head">
-          <p className="h-page__kicker">Hiệu trưởng</p>
-          {era.principals.length > 1 && (
-            <div className="h-tabs" role="tablist" aria-label="Các đời hiệu trưởng trong giai đoạn">
-              {era.principals.map((x, i) => (
-                <button
-                  key={x.term}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === tab}
-                  className={`h-tab${i === tab ? ' is-active' : ''}`}
-                  onClick={() => setTab(i)}
-                  onPointerDown={(e) => e.stopPropagation()}
-                >
-                  {x.term.replace('Hiệu trưởng nhiệm kỳ ', '')}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="h-principal" key={tab}>
-          <PhotoView kind="portrait" src={p.photo} alt={`Chân dung ${p.name}`} className="h-principal__photo" />
-          <div>
-            <p className="h-principal__name">{p.name}</p>
-            <p className="h-principal__meta">{p.title}</p>
-            <p className="h-principal__term">{p.term}</p>
-          </div>
-        </div>
-      </div>
-      <h4 className="h-page__subhead">Bối cảnh và thành tựu</h4>
-      <p className="h-page__summary">{era.summary}</p>
-      <ol className="h-page__milestones" aria-label="Cột mốc trong giai đoạn">
-        {era.milestones.map((m) => (
-          <li key={m.label}>
-            <strong>{m.label}</strong>
-            <span>{m.note}</span>
-          </li>
-        ))}
-      </ol>
-      <span className="h-page__folio">{index * 2 + 2}</span>
-    </div>
-  );
-}
-
-function Cover() {
-  return (
-    <div className="h-cover">
-      <PhotoView kind="old" alt="" className="h-cover__art" />
-      <div className="h-cover__frame">
-        <p className="h-cover__over">Trường THPT Chuyên</p>
-        <Lotus className="h-cover__rule" />
-        <p className="h-cover__name">Phan Bội Châu</p>
-        <Lotus className="h-cover__rule" />
-        <p className="h-cover__years">Sử ký 1974 – nay</p>
-      </div>
-    </div>
-  );
-}
-
-const left = (i: number) => <LeftPage key={`l${i}`} era={ERAS[i]} index={i} />;
-const right = (i: number) => <RightPage key={`r${i}`} era={ERAS[i]} index={i} />;
-/** Trên điện thoại mỗi giai đoạn là hai trang liền nhau: trang chẵn là ảnh, trang lẻ là hiệu trưởng và bối cảnh. */
-const face = (v: number) => (v % 2 ? right(v >> 1) : left(v >> 1));
-/** Mặt sau tờ giấy trên điện thoại: giấy trắng. */
-const blank = <div className="h-page h-page--blank" />;
-
-/* ---------- Cuốn sách ---------- */
-
-/** Chỉ phản ứng với animation của chính phần tử, bỏ qua animation của con (sự kiện nổi bọt). */
-const own = (fn: () => void) => (e: React.AnimationEvent) => {
-  if (e.target === e.currentTarget) fn();
-};
-const noop = () => {};
-
-type Phase = 'closed' | 'opening' | 'open';
-interface Flip {
-  from: number;
-  to: number;
-  dir: 1 | -1;
-}
-/** Tờ giấy đang được kéo bằng tay. `p`: 0 = nằm yên, 1 = đã lật hẳn sang bên kia. */
-interface Drag extends Flip {
-  p: number;
-  release?: 0 | 1; // đã buông tay: lật nốt (1) hay rơi về chỗ cũ (0)
-}
+/* ---------- Cuốn sách ----------
+   Nội dung trang: BookPages.tsx. Tờ giấy cong: TurningLeaf.tsx.
+   Các trang và tờ giấy nằm trên sách ở mỗi lúc: BookScenes.tsx. Thanh mốc thời gian: Timeline.tsx. */
 
 interface BookProps {
   page: number;
@@ -123,70 +16,6 @@ interface BookProps {
 
 const AUTO_MS = 6500; // đang xem sách thì cứ chừng này lại tự giở sang trang mới
 const LAST = ERAS.length - 1;
-
-/** Số dải dọc ghép thành một tờ giấy: mỗi dải nghiêng thêm một chút nên cả tờ cong như giấy thật. */
-const SEGS = 6;
-
-/**
- * Dải thứ i của tờ giấy, tính từ gáy ra mép ngoài. Dải sau lồng trong dải trước và quay quanh mép chung,
- * nên độ cong (--bend) cộng dồn dọc theo tờ. Mỗi mặt của dải chỉ hiện đúng phần trang nằm ở chỗ đó.
- */
-function LeafSegment({ i, fwd, front, back }: { i: number; fwd: boolean; front: ReactNode; back: ReactNode }) {
-  const far = SEGS - 1 - i;
-  return (
-    <div className="h-seg" style={{ '--i': i } as CSSProperties}>
-      <div className="h-leaf__face h-leaf__front">
-        <div className="h-seg__in" style={{ '--o': fwd ? i : far } as CSSProperties}>
-          {front}
-        </div>
-      </div>
-      <div className="h-leaf__face h-leaf__back">
-        <div className="h-seg__in" style={{ '--o': fwd ? far : i } as CSSProperties}>
-          {back}
-        </div>
-      </div>
-      {i < SEGS - 1 && <LeafSegment i={i + 1} fwd={fwd} front={front} back={back} />}
-    </div>
-  );
-}
-
-/** Tờ giấy đang lật và bóng đổ của nó; mọi chuyển động tính theo biến --p (0 -> 1) và độ cong --bend. */
-function TurningLeaf({
-  dir,
-  faces,
-  className,
-  style,
-  front,
-  back,
-  onEnd,
-}: {
-  dir: 1 | -1;
-  /** Đổi khi nội dung hai mặt đổi; giữ nguyên thì không vẽ lại các dải khi đang kéo. */
-  faces: string;
-  className: string;
-  style?: CSSProperties;
-  front: ReactNode;
-  back: ReactNode;
-  onEnd: () => void;
-}) {
-  const fwd = dir === 1;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const leaf = useMemo(() => <LeafSegment i={0} fwd={fwd} front={front} back={back} />, [faces, fwd]);
-  return (
-    // Các trang trên tờ giấy chỉ là bản sao để vẽ: không cho bấm, không cho phím Tab đi vào, trình đọc màn hình bỏ qua
-    <div
-      className={`h-turning ${className}`}
-      style={style}
-      onAnimationEnd={own(onEnd)}
-      aria-hidden="true"
-      {...{ inert: '' }}
-    >
-      <div className={`h-cast h-cast--${fwd ? 'reveal-right' : 'reveal-left'}`} aria-hidden="true" />
-      <div className={`h-cast h-cast--${fwd ? 'land-left' : 'land-right'}`} aria-hidden="true" />
-      <div className={`h-leaf h-leaf--${fwd ? 'right' : 'left'}`}>{leaf}</div>
-    </div>
-  );
-}
 
 export function Book({ page, onPage }: BookProps) {
   const [stageRef, inView] = useInView<HTMLElement>(0.45);
@@ -339,146 +168,16 @@ export function Book({ page, onPage }: BookProps) {
     if (e.key === 'ArrowLeft') go(-1);
   };
 
-  const spread = (l: number, r: number) => (
-    <>
-      <div className="h-sheet h-sheet--left">{left(l)}</div>
-      <div className="h-sheet h-sheet--right">{right(r)}</div>
-    </>
-  );
-
-  let content: ReactNode;
-
-  if (single) {
-    /* Điện thoại: sách mở một trang cao gần hết màn hình, gáy ở mép trái.
-       Lật tới: trang đang xem cong lên rồi lật qua gáy ra ngoài màn hình, lộ trang sau nằm bên dưới.
-       Lật lui: trang trước từ ngoài mép trái lật về phủ lên trang đang xem. */
-    const sheet = (v: number) => <div className="h-sheet h-sheet--single">{face(v)}</div>;
-    if (phase !== 'open') {
-      content = (
-        <>
-          {sheet(0)}
-          <TurningLeaf
-            dir={1}
-            faces="m-cover"
-            className={phase === 'opening' ? 'is-auto is-cover' : ''}
-            front={<Cover />}
-            back={blank}
-            onEnd={() => setPhase('open')}
-          />
-        </>
-      );
-    } else if (flip || drag) {
-      const f = (drag ?? flip) as Flip;
-      const fwd = f.dir === 1;
-      const top = fwd ? f.from : f.to; // trang nằm trên tờ giấy đang lật
-      // Tờ giấy luôn quay quanh gáy trái: --p = 0 là nằm trên sách, 1 là đã lật hẳn ra ngoài.
-      // Lật lui thì tờ đi ngược (1 -> 0), nên đổi tiến độ kéo tay sang góc của tờ.
-      const leafP = (x: number) => (fwd ? x : 1 - x);
-      let className: string;
-      let style: CSSProperties | undefined;
-      if (drag && drag.release === undefined) {
-        className = `is-dragging${fwd ? '' : ' is-rev'}`;
-        style = { '--p': leafP(drag.p) } as CSSProperties;
-      } else if (drag) {
-        const from = leafP(drag.p);
-        const to = leafP(drag.release === 1 ? 1 : 0);
-        const ms = Math.round(600 + 1000 * Math.abs(to - from));
-        className = `is-release ${to === 1 ? 'is-done' : 'is-back'}${fwd ? '' : ' is-rev'}`;
-        style = { '--from': from, '--to': to, '--release-ms': `${ms}ms` } as CSSProperties;
-      } else if (fwd) {
-        className = 'is-auto';
-      } else {
-        className = 'is-release is-back';
-        style = { '--from': 1, '--to': 0, '--release-ms': 'var(--flip-ms)' } as CSSProperties;
-      }
-      content = (
-        <>
-          {sheet(fwd ? f.to : f.from)}
-          <TurningLeaf
-            dir={1}
-            faces={`m${top}`}
-            className={className}
-            style={style}
-            front={face(top)}
-            back={blank}
-            onEnd={drag ? endDrag : finishFlip}
-          />
-        </>
-      );
-    } else {
-      // Dựng sẵn tờ giấy cho lần lật tới kế tiếp (ẩn), nên lúc lật không phải dựng các dải giấy nữa
-      content = (
-        <>
-          {sheet(shown)}
-          {shown < lastView && (
-            <TurningLeaf dir={1} faces={`m${shown}`} className="is-parked" front={face(shown)} back={blank} onEnd={noop} />
-          )}
-        </>
-      );
-    }
-  } else if (phase !== 'open') {
-    content = (
-      <>
-        <div className="h-sheet h-sheet--left h-sheet--blank" />
-        <div className="h-sheet h-sheet--right">{right(0)}</div>
-        <TurningLeaf
-          dir={1}
-          faces="cover"
-          className={phase === 'opening' ? 'is-auto is-cover' : ''}
-          front={<Cover />}
-          back={left(0)}
-          onEnd={() => setPhase('open')}
-        />
-      </>
-    );
-  } else if (flip || drag) {
-    const f = (drag ?? flip) as Flip;
-    const fwd = f.dir === 1;
-    let className = 'is-auto';
-    let style: CSSProperties | undefined;
-    if (drag) {
-      if (drag.release === undefined) {
-        className = 'is-dragging';
-        style = { '--p': drag.p } as CSSProperties;
-      } else {
-        // Buông tay: đi tiếp từ chỗ đang dừng (lật nốt hoặc rơi về), rồi giấy rung nhẹ trước khi nằm yên
-        className = `is-release ${drag.release === 1 ? 'is-done' : 'is-back'}`;
-        const ms = Math.round(700 + 1100 * Math.abs(drag.release - drag.p));
-        style = { '--from': drag.p, '--to': drag.release, '--release-ms': `${ms}ms` } as CSSProperties;
-      }
-    }
-    content = (
-      <>
-        {spread(fwd ? f.from : f.to, fwd ? f.to : f.from)}
-        <TurningLeaf
-          dir={f.dir}
-          faces={`${f.from}-${f.to}`}
-          className={className}
-          style={style}
-          front={fwd ? right(f.from) : left(f.from)}
-          back={fwd ? left(f.to) : right(f.to)}
-          onEnd={drag ? endDrag : finishFlip}
-        />
-      </>
-    );
-  } else {
-    // Dựng sẵn (ẩn) tờ giấy cho lần lật tới kế tiếp, cùng chỗ trong cây với tờ đang lật nên được dùng lại nguyên
-    content = (
-      <>
-        {spread(shown, shown)}
-        {shown < lastView && (
-          <TurningLeaf
-            dir={1}
-            faces={`${shown}-${shown + 1}`}
-            className="is-parked"
-            front={right(shown)}
-            back={left(shown + 1)}
-            onEnd={noop}
-          />
-        )}
-      </>
-    );
-  }
+  const scene = {
+    phase,
+    flip,
+    drag,
+    shown,
+    lastView,
+    onOpened: () => setPhase('open'),
+    onTurned: drag ? endDrag : finishFlip,
+  };
+  const content = single ? phoneScene(scene) : desktopScene(scene);
 
   const pick = (i: number) => {
     setNudge((n) => n + 1);
@@ -540,34 +239,5 @@ export function Book({ page, onPage }: BookProps) {
         </div>
       </div>
     </section>
-  );
-}
-
-/* ---------- Thanh mốc thời gian ---------- */
-
-function Timeline({ page, onPage }: BookProps) {
-  return (
-    <nav className="h-timeline" aria-label="Mốc lịch sử">
-      <ol className="h-timeline__eras">
-        {ERAS.map((era, i) => (
-          <li key={era.id} className={`h-tl-era${i === page ? ' is-active' : ''}${i < page ? ' is-past' : ''}`}>
-            <button type="button" className="h-tl-era__btn" onClick={() => onPage(i)} aria-current={i === page ? 'step' : undefined}>
-              <span className="h-tl-era__dot" aria-hidden="true" />
-              {era.range}
-            </button>
-            <ul className="h-tl-era__ticks">
-              {era.milestones.map((m) => (
-                <li key={m.label}>
-                  <button type="button" className="h-tl-tick" onClick={() => onPage(i)} title={m.note}>
-                    <span className="h-tl-tick__dot" aria-hidden="true" />
-                    {m.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ol>
-    </nav>
   );
 }

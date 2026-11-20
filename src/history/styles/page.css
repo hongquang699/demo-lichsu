@@ -1,0 +1,217 @@
+/* Nội dung trang */
+.h-page {
+  position: absolute;
+  inset: 0;
+  padding: clamp(18px, 2.6vw, 30px) clamp(22px, 3vw, 40px) 40px;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  font-family: var(--serif);
+}
+
+.h-page--left {
+  padding-right: clamp(28px, 3.6vw, 48px);
+}
+
+.h-page--right {
+  padding-left: clamp(28px, 3.6vw, 48px);
+}
+
+.h-page__running {
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--paper-edge);
+  font-family: var(--serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.h-page__running--right {
+  text-align: right;
+}
+
+.h-page__range {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 4.2vw, 3.3rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--burgundy);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.h-page__figure {
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.h-page__figure .h-zoom {
+  flex: 1;
+  min-height: 0;
+}
+
+.h-page__figure figcaption {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.h-page__folio {
+  position: absolute;
+  bottom: 14px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.h-page--left .h-page__folio { left: 28px; }
+.h-page--right .h-page__folio { right: 28px; }
+
+.h-principal-card {
+  padding: 14px 16px 16px;
+  border-radius: 10px;
+  background: rgb(var(--navy-rgb) / 0.045);
+}
+
+.h-principal-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.h-page__kicker {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.h-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(var(--navy-rgb) / 0.08);
+}
+
+.h-tab {
+  padding: 4px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font: 500 0.88rem var(--serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  cursor: pointer;
+  transition: background-color 200ms, color 200ms;
+}
+
+.h-tab.is-active {
+  background: var(--navy);
+  color: var(--cream);
+}
+
+.h-tab:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 1px;
+}
+
+.h-principal {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  animation: h-rise 450ms var(--ease-out);
+}
+
+.h-photo.h-principal__photo {
+  height: auto;
+  width: clamp(80px, 9vw, 104px);
+  aspect-ratio: 5 / 6;
+  flex-shrink: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px var(--paper), 0 3px 10px rgb(var(--shade-rgb) / 0.25);
+}
+
+.h-principal__name {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--navy);
+}
+
+.h-principal__meta,
+.h-principal__term {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.h-principal__term {
+  color: var(--burgundy);
+  font-weight: 600;
+}
+
+.h-page__subhead {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.h-page__summary {
+  flex: 1 1 auto;
+  min-height: 3.2em;
+  margin: 0;
+  padding-right: 6px;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+  /* Tóm tắt dài thì cuộn bên trong trang, mờ dần ở mép dưới */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent);
+}
+
+.h-page__milestones {
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 0;
+  font-size: 0.82rem;
+  display: grid;
+}
+
+.h-page__milestones li {
+  display: grid;
+  grid-template-columns: 6.6rem 1fr;
+  gap: 10px;
+  padding: 4px 0;
+  border-top: 1px dotted var(--paper-edge-2);
+}
+
+.h-page__milestones strong {
+  color: var(--burgundy);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.h-page__milestones span {
+  color: var(--muted);
+}
+
+@keyframes h-rise {
+  from { opacity: 0; transform: translateY(8px); }
+}

@@ -457,7 +457,6 @@ export function Book({ page, onPage }: BookProps) {
 
   return (
     <section ref={stageRef} className="h-book-stage" id="h-book" aria-label="Cuốn sách lịch sử">
-      <div className="h-book-stage__light" aria-hidden="true" />
       <div className="h-book-layout">
         <Timeline page={page} onPage={pick} />
         <div className="h-book-main">
@@ -480,11 +479,15 @@ export function Book({ page, onPage }: BookProps) {
               aria-roledescription="sách"
               aria-label={`Trang ${ERAS[page].range}. Kéo mép trang hoặc dùng phím mũi tên để lật trang.`}
             >
+              {/* Bìa cứng bọc da nằm dưới xấp giấy, lộ ra một viền quanh các trang */}
+              <div className="h-book__board h-book__board--left" aria-hidden="true" />
+              <div className="h-book__board h-book__board--right" aria-hidden="true" />
               {content}
               <div className="h-book__spine" aria-hidden="true" />
             </div>
-            <div className="h-book-shadow" aria-hidden="true" />
           </div>
+          {/* Bóng sách đổ xuống mặt bàn */}
+          <div className="h-book-shadow" aria-hidden="true" />
 
           <div className="h-book-nav">
             <button type="button" className="h-arrow" onClick={() => go(-1)} disabled={phase === 'open' && target === 0} aria-label="Trang trước">

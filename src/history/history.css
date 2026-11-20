@@ -1206,13 +1206,27 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  padding: 8px 16px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 1px solid rgb(var(--beige-rgb) / 0.5);
-  border-radius: 999px;
+  border-radius: 50%;
   background: transparent;
   color: var(--cream);
-  font: inherit;
   cursor: pointer;
+  transition: background-color 200ms, border-color 200ms;
+}
+
+.h-lightbox__close:hover {
+  background: rgb(var(--beige-rgb) / 0.12);
+  border-color: rgb(var(--beige-rgb) / 0.8);
+}
+
+.h-lightbox__close:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
 }
 
 @keyframes h-zoom-in {

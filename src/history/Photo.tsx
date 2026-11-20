@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { PhotoKind } from './data';
 
 /* Ảnh minh hoạ tạm, vẽ bằng SVG, dùng khi chưa có ảnh tư liệu thật. */
@@ -123,6 +124,7 @@ export function PhotoView({ kind, src, alt, className = '' }: PhotoProps) {
 /** Ảnh bấm vào để phóng to. */
 export function ZoomablePhoto(props: PhotoProps & { caption: string }) {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -134,6 +136,7 @@ export function ZoomablePhoto(props: PhotoProps & { caption: string }) {
   return (
     <>
       <button
+        ref={btnRef}
         type="button"
         className="h-zoom"
         onClick={() => setOpen(true)}
@@ -145,17 +148,32 @@ export function ZoomablePhoto(props: PhotoProps & { caption: string }) {
           Phóng to
         </span>
       </button>
-      {open && (
-        <div className="h-lightbox" role="dialog" aria-modal="true" aria-label={props.caption} onClick={() => setOpen(false)}>
+      {/* Đưa ra ngoài cuốn sách (sách xoay 3D nên khung cố định bên trong bị nhốt trong sách),
+          nhưng vẫn trong .history để giữ màu và font của trang */}
+      {open &&
+        createPortal(
+        <div
+          className="h-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={props.caption}
+          onClick={() => setOpen(false)}
+          // Sự kiện trong portal vẫn nổi lên cuốn sách theo cây React: chặn lại để kéo hay bấm phím ở đây không lật trang phía sau
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <figure className="h-lightbox__figure" onClick={(e) => e.stopPropagation()}>
             <PhotoView {...props} className="h-lightbox__photo" />
             <figcaption>{props.caption}</figcaption>
           </figure>
-          <button type="button" className="h-lightbox__close" onClick={() => setOpen(false)} autoFocus>
-            Đóng
+          <button type="button" className="h-lightbox__close" onClick={() => setOpen(false)} aria-label="Đóng" title="Đóng" autoFocus>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
           </button>
-        </div>
-      )}
+        </div>,
+          btnRef.current?.closest('.history') ?? document.body,
+        )}
     </>
   );
 }

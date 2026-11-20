@@ -1,0 +1,205 @@
+/* Hoạt ảnh gia đình chạy vào chụp ảnh. Chỉ dùng 4 màu gốc của site. */
+.fam {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.fam__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgb(var(--navy-rgb) / 0.35);
+  background: var(--bg);
+  --ground: 22%;
+}
+
+.fam__sky {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgb(var(--beige-rgb) / 0.2), rgb(var(--shade-rgb) / 0.12));
+}
+
+.fam__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--ground);
+  background: color-mix(in srgb, var(--green) 25%, var(--bg));
+  border-top: 2px solid var(--green);
+}
+
+/* ---- Người chạy ---- */
+.fam__runner {
+  position: absolute;
+  bottom: calc(var(--ground) - 4%);
+  left: var(--x);
+  width: calc(9% * var(--s));
+  aspect-ratio: 1 / 2;
+  margin-left: calc(-4.5% * var(--s));
+  animation: fam-run-in 3.4s cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay) both;
+}
+
+.fam__runner--left {
+  --from: -120vw;
+}
+.fam__runner--right {
+  --from: 120vw;
+}
+
+@keyframes fam-run-in {
+  from {
+    transform: translateX(var(--from));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.fam__body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.fam__runner--right .fam__body {
+  transform: scaleX(-1);
+}
+
+/* Các khung hình chồng lên nhau, chỉ khung hiện tại được hiện */
+.fam__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  visibility: hidden;
+  user-select: none;
+}
+.fam__img.is-active {
+  visibility: visible;
+}
+
+.fam__name {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--navy);
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.4s;
+}
+.fam__stage--photo .fam__name {
+  opacity: 1;
+}
+
+/* Chạy nảy nhẹ (khung hình do ảnh frame1, frame2... đảm nhận) */
+.fam__stage--run .fam__body {
+  animation: fam-bounce 0.16s ease-in-out infinite alternate;
+}
+@keyframes fam-bounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-5%); }
+}
+.fam__stage--run .fam__runner--right .fam__body {
+  animation-name: fam-bounce-r;
+}
+@keyframes fam-bounce-r {
+  from { transform: scaleX(-1) translateY(0); }
+  to   { transform: scaleX(-1) translateY(-5%); }
+}
+
+/* Dừng lại (ảnh pose) và nhảy lên một cái */
+.fam__stage--pose .fam__body {
+  animation: fam-hop 0.4s ease-out;
+}
+.fam__stage--pose .fam__runner--right .fam__body {
+  animation-name: fam-hop-r;
+}
+@keyframes fam-hop {
+  50% { transform: translateY(-10%); }
+}
+@keyframes fam-hop-r {
+  50% { transform: scaleX(-1) translateY(-10%); }
+}
+
+/* ---- Khung ảnh ---- */
+.fam__frame {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 8%;
+  bottom: 12%;
+  border: 6px solid var(--burgundy);
+  outline: 2px solid var(--bg);
+  outline-offset: -10px;
+  box-shadow: 0 8px 24px rgb(var(--shade-rgb) / 0.35);
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+.fam__stage--photo .fam__frame {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fam__caption {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+  padding: 2px 14px;
+  background: var(--bg);
+  border: 1px solid var(--burgundy);
+  color: var(--burgundy);
+  font-family: 'Playfair Display', serif;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* ---- Đèn flash ---- */
+.fam__flash {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+}
+.fam__stage--photo .fam__flash {
+  animation: fam-flash 0.7s ease-out;
+}
+@keyframes fam-flash {
+  0%   { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+.fam__replay {
+  padding: 8px 22px;
+  border: 1px solid var(--burgundy);
+  background: var(--burgundy);
+  color: var(--cream);
+  font: inherit;
+  cursor: pointer;
+}
+.fam__replay:hover {
+  background: color-mix(in srgb, var(--burgundy) 80%, var(--navy));
+}
+.fam__replay:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fam__runner,
+  .fam__stage .fam__body,
+  .fam__stage--photo .fam__flash {
+    animation: none;
+  }
+}

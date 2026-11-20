@@ -5,6 +5,7 @@ import { ERAS } from './data';
 import { prefersReducedMotion } from './hooks';
 import { Intro } from './Intro';
 import { Leaders } from './Leaders';
+import { Narrator } from './Narrator';
 // @ts-ignore: CSS imports are handled by the Vite build.
 import './history.css';
 
@@ -72,6 +73,7 @@ export function HistoryPage() {
       <Book page={page} onPage={setPage} />
       <Compare />
       <Leaders />
+      <Narrator page={page} />
     </div>
   );
 }

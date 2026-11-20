@@ -102,6 +102,7 @@ const blank = <div className="h-page h-page--blank" />;
 const own = (fn: () => void) => (e: React.AnimationEvent) => {
   if (e.target === e.currentTarget) fn();
 };
+const noop = () => {};
 
 type Phase = 'closed' | 'opening' | 'open';
 interface Flip {
@@ -172,7 +173,14 @@ function TurningLeaf({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const leaf = useMemo(() => <LeafSegment i={0} fwd={fwd} front={front} back={back} />, [faces, fwd]);
   return (
-    <div className={`h-turning ${className}`} style={style} onAnimationEnd={own(onEnd)}>
+    // Các trang trên tờ giấy chỉ là bản sao để vẽ: không cho bấm, không cho phím Tab đi vào, trình đọc màn hình bỏ qua
+    <div
+      className={`h-turning ${className}`}
+      style={style}
+      onAnimationEnd={own(onEnd)}
+      aria-hidden="true"
+      {...{ inert: '' }}
+    >
       <div className={`h-cast h-cast--${fwd ? 'reveal-right' : 'reveal-left'}`} aria-hidden="true" />
       <div className={`h-cast h-cast--${fwd ? 'land-left' : 'land-right'}`} aria-hidden="true" />
       <div className={`h-leaf h-leaf--${fwd ? 'right' : 'left'}`}>{leaf}</div>
@@ -398,7 +406,15 @@ export function Book({ page, onPage }: BookProps) {
         </>
       );
     } else {
-      content = sheet(shown);
+      // Dựng sẵn tờ giấy cho lần lật tới kế tiếp (ẩn), nên lúc lật không phải dựng các dải giấy nữa
+      content = (
+        <>
+          {sheet(shown)}
+          {shown < lastView && (
+            <TurningLeaf dir={1} faces={`m${shown}`} className="is-parked" front={face(shown)} back={blank} onEnd={noop} />
+          )}
+        </>
+      );
     }
   } else if (phase !== 'open') {
     content = (
@@ -446,7 +462,22 @@ export function Book({ page, onPage }: BookProps) {
       </>
     );
   } else {
-    content = spread(shown, shown);
+    // Dựng sẵn (ẩn) tờ giấy cho lần lật tới kế tiếp, cùng chỗ trong cây với tờ đang lật nên được dùng lại nguyên
+    content = (
+      <>
+        {spread(shown, shown)}
+        {shown < lastView && (
+          <TurningLeaf
+            dir={1}
+            faces={`${shown}-${shown + 1}`}
+            className="is-parked"
+            front={right(shown)}
+            back={left(shown + 1)}
+            onEnd={noop}
+          />
+        )}
+      </>
+    );
   }
 
   const pick = (i: number) => {

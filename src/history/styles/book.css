@@ -2,6 +2,7 @@
 
 .h-book-stage {
   position: relative;
+  isolation: isolate; /* để bóng dưới sách (z-index âm) vẫn nằm trong khu sách, không chìm xuống dưới nền trang */
   margin-top: 112px;
   padding: 12px 0 0;
   scroll-margin-top: 12px;
@@ -119,15 +120,39 @@
   transform: rotateX(var(--tilt)) translateX(25%);
 }
 
-.h-book.is-shut .h-book__board--right {
+.h-book.is-shut .h-book__board--right,
+.h-book.is-shutting .h-book__board--right {
+  opacity: 0;
+}
+
+/* Nhìn từ mặt sau, tấm bìa phủ kín xấp giấy: mặt sau bìa vẽ to đúng bằng tấm bìa da (lớn hơn trang giấy một viền),
+   bỏ mép giấy xếp lớp và tấm bìa phía dưới, nếu không ba lớp sẽ chồng lệch nhau */
+.h-book.is-shut > .h-sheet--left {
+  overflow: visible;
+  background: none;
+  box-shadow: none;
+}
+
+.h-book.is-shut > .h-sheet--left > .h-cover--back {
+  inset: -12px 0 -16px -18px;
+  border-radius: 9px 3px 3px 9px;
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--dark-rgb) / 0.35),
+    inset 0 2px 1px rgb(255 220 180 / 0.25),
+    0 22px 36px -10px rgb(var(--dark-rgb) / 0.45),
+    0 6px 10px rgb(var(--dark-rgb) / 0.2);
+}
+
+.h-book.is-shut .h-book__board--left {
   opacity: 0;
 }
 
 /* Bóng sách trên mặt bàn: đậm sát chân sách, kéo dài lệch sang phải (nắng chiếu từ trái) */
 .h-book-shadow {
   position: relative;
-  z-index: 1;
+  z-index: -1; /* nằm dưới cuốn sách, không đè lên mép dưới của bìa */
   width: 92%;
+  transition: width 1100ms var(--ease-out);
   height: 34px;
   margin: -14px auto 0;
   transform: translateX(2.5%) skewX(-24deg);
@@ -207,4 +232,9 @@
 .h-book.is-opening .h-sheet--blank {
   visibility: visible;
   animation: h-fade-in var(--flip-ms) ease-in both;
+}
+
+/* Sách đang đóng (bìa trước) hoặc đã gập (bìa sau) chỉ rộng bằng nửa sách mở: bóng dưới sách cũng thu lại cho vừa */
+.h-book-main:has(.h-book.is-closed, .h-book.is-shut) .h-book-shadow {
+  width: 46%;
 }

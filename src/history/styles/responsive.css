@@ -48,6 +48,11 @@
     transform: none;
   }
 
+  /* Điện thoại: sách đóng vẫn rộng hết cột, bóng giữ nguyên bề ngang */
+  .h-book-main:has(.h-book.is-closed) .h-book-shadow {
+    width: 92%;
+  }
+
   .h-book.is-single > .h-sheet {
     position: absolute;
     inset: 0;

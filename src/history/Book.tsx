@@ -203,6 +203,9 @@ export function Book({ page, onPage }: BookProps) {
 
   // Máy tính: đã gập bìa sau, sách chỉ còn nửa trái (mặt sau bìa) nên dịch vào giữa
   const shut = !single && phase === 'open' && !flip && !drag && shown === lastView;
+  // Đang gập hoặc mở lại bìa sau: nửa phải lúc này trống (chính tấm bìa đang lật), không hiện tấm bìa phải
+  const turning = drag ?? flip;
+  const shutting = !single && !!turning && (turning.from === lastView || turning.to === lastView);
   const atEnd = phase === 'open' && target === lastView;
 
   /** Đọc lại từ đầu: lật thẳng về trang đầu tiên. */
@@ -232,7 +235,7 @@ export function Book({ page, onPage }: BookProps) {
             onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setHold(false)}
           >
             <div
-              className={`h-book is-${phase}${single ? ' is-single' : ''}${drag ? ' is-grabbing' : ''}${shut ? ' is-shut' : ''}`}
+              className={`h-book is-${phase}${single ? ' is-single' : ''}${drag ? ' is-grabbing' : ''}${shut ? ' is-shut' : ''}${shutting ? ' is-shutting' : ''}`}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}

@@ -14,6 +14,12 @@ interface BookProps {
   onPage: (i: number) => void;
 }
 
+/** Chạy việc khi trình duyệt rảnh (Safari chưa có requestIdleCallback thì chờ một chút). */
+const hasIdle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function';
+const whenIdle = (fn: () => void): number =>
+  hasIdle ? window.requestIdleCallback(fn, { timeout: 900 }) : window.setTimeout(fn, 250);
+const cancelIdle = (id: number) => (hasIdle ? window.cancelIdleCallback(id) : window.clearTimeout(id));
+
 const AUTO_MS = 6500; // đang xem sách thì cứ chừng này lại tự giở sang trang mới
 const LAST = ERAS.length - 1;
 
@@ -168,7 +174,19 @@ export function Book({ page, onPage }: BookProps) {
     if (e.key === 'ArrowLeft') go(-1);
   };
 
+  /* Dựng tờ giấy (bìa khi sách còn đóng, tờ dựng sẵn cho lần lật kế tiếp) lúc trình duyệt rảnh,
+     để việc dựng 12 bản sao trang không chen vào lúc vừa vào trang hay lúc tờ giấy vừa đáp xuống.
+     Chưa dựng xong thì bìa hiện dạng phẳng (trông y hệt), còn lần lật kế tiếp tự dựng như bình thường. */
+  const warmKey = `${phase === 'closed' ? 'closed' : 'open'}-${shown}-${single ? 'phone' : 'desk'}`;
+  const [warm, setWarm] = useState('');
+  useEffect(() => {
+    if (flip || drag) return;
+    const id = whenIdle(() => setWarm(warmKey));
+    return () => cancelIdle(id);
+  }, [warmKey, flip, drag]);
+
   const scene = {
+    prebuilt: warm === warmKey,
     phase,
     flip,
     drag,

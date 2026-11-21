@@ -53,6 +53,10 @@
     inset: 0;
   }
 
+  .h-book.is-single > .h-cover-flat {
+    width: auto;
+  }
+
   /* Gáy ở mép trái, các tờ giấy xếp chồng lộ ra ở mép phải và mép dưới */
   .h-sheet--single {
     border-radius: 0 5px 5px 0;

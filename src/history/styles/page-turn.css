@@ -265,6 +265,9 @@
   inset: -1.5px; /* phủ cả phần chồng mép, nếu không chỗ nối sẽ sáng hơn */
   z-index: 1;
   opacity: 1;
+  /* Bóng đổi theo từng khung hình khi lật: đặt thành lớp riêng để trình duyệt chỉ vẽ lại lớp bóng mỏng này,
+     không phải vẽ lại cả nội dung trang (chữ, ảnh) nằm bên dưới mỗi khung hình */
+  will-change: transform;
   /* 5 điểm màu mỗi dải: bóng đổi đều theo đường cong, không thành nếp gấp ở chỗ nối hai dải */
   background: linear-gradient(
     var(--shade-dir, 90deg),

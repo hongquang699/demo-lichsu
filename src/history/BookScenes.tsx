@@ -17,6 +17,8 @@ export interface Drag extends Flip {
 }
 
 export interface SceneState {
+  /** Trình duyệt đã rảnh để dựng sẵn tờ giấy (bìa khi sách đóng, tờ cho lần lật kế tiếp). */
+  prebuilt: boolean;
   phase: Phase;
   flip: Flip | null;
   drag: Drag | null;
@@ -39,21 +41,27 @@ export interface SceneState {
  * Lật tới: trang đang xem cong lên rồi lật qua gáy ra ngoài màn hình, lộ trang sau nằm bên dưới.
  * Lật lui: trang trước từ ngoài mép trái lật về phủ lên trang đang xem.
  */
-export function phoneScene({ phase, flip, drag, shown, lastView, onOpened, onTurned }: SceneState): ReactNode {
+export function phoneScene({ prebuilt, phase, flip, drag, shown, lastView, onOpened, onTurned }: SceneState): ReactNode {
   const sheet = (v: number) => <div className="h-sheet h-sheet--single">{face(v)}</div>;
 
   if (phase !== 'open') {
     return (
       <>
         {sheet(0)}
-        <TurningLeaf
-          dir={1}
-          faces="m-cover"
-          className={phase === 'opening' ? 'is-auto is-cover' : ''}
-          front={<Cover />}
-          back={blank}
-          onEnd={onOpened}
-        />
+        {phase === 'closed' && !prebuilt ? (
+          <div className="h-sheet h-sheet--single h-cover-flat">
+            <Cover />
+          </div>
+        ) : (
+          <TurningLeaf
+            dir={1}
+            faces="m-cover"
+            className={phase === 'opening' ? 'is-auto is-cover' : ''}
+            front={<Cover />}
+            back={blank}
+            onEnd={onOpened}
+          />
+        )}
       </>
     );
   }
@@ -102,7 +110,7 @@ export function phoneScene({ phase, flip, drag, shown, lastView, onOpened, onTur
   return (
     <>
       {sheet(shown)}
-      {shown < lastView && (
+      {prebuilt && shown < lastView && (
         <TurningLeaf dir={1} faces={`m${shown}`} className="is-parked" front={face(shown)} back={blank} onEnd={noop} />
       )}
     </>
@@ -110,7 +118,7 @@ export function phoneScene({ phase, flip, drag, shown, lastView, onOpened, onTur
 }
 
 /** Máy tính: sách mở hai trang, tờ giấy lật qua gáy ở giữa. */
-export function desktopScene({ phase, flip, drag, shown, lastView, onOpened, onTurned }: SceneState): ReactNode {
+export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onOpened, onTurned }: SceneState): ReactNode {
   const spread = (l: number, r: number) => (
     <>
       <div className="h-sheet h-sheet--left">{left(l)}</div>
@@ -123,14 +131,20 @@ export function desktopScene({ phase, flip, drag, shown, lastView, onOpened, onT
       <>
         <div className="h-sheet h-sheet--left h-sheet--blank" />
         <div className="h-sheet h-sheet--right">{right(0)}</div>
-        <TurningLeaf
-          dir={1}
-          faces="cover"
-          className={phase === 'opening' ? 'is-auto is-cover' : ''}
-          front={<Cover />}
-          back={left(0)}
-          onEnd={onOpened}
-        />
+        {phase === 'closed' && !prebuilt ? (
+          <div className="h-sheet h-sheet--right h-cover-flat">
+            <Cover />
+          </div>
+        ) : (
+          <TurningLeaf
+            dir={1}
+            faces="cover"
+            className={phase === 'opening' ? 'is-auto is-cover' : ''}
+            front={<Cover />}
+            back={left(0)}
+            onEnd={onOpened}
+          />
+        )}
       </>
     );
   }
@@ -171,7 +185,7 @@ export function desktopScene({ phase, flip, drag, shown, lastView, onOpened, onT
   return (
     <>
       {spread(shown, shown)}
-      {shown < lastView && (
+      {prebuilt && shown < lastView && (
         <TurningLeaf
           dir={1}
           faces={`${shown}-${shown + 1}`}

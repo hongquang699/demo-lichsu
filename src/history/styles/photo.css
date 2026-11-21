@@ -15,8 +15,8 @@
   object-fit: cover;
 }
 
-.h-photo--old > img,
-.h-photo--old > .h-art {
+/* Ảnh thật cũ: chuyển trắng đen ngả nâu. Ảnh minh hoạ (.h-art) đã làm sẵn màu này trong hình nên không lọc lại. */
+.h-photo--old > img:not(.h-art) {
   filter: grayscale(1) sepia(0.3) contrast(1.05);
 }
 

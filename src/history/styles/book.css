@@ -179,6 +179,17 @@
     10px 12px 16px rgb(var(--dark-rgb) / 0.22);
 }
 
+/* Bìa phẳng: hiện thay tờ bìa lúc sách còn đóng và trình duyệt chưa rảnh để dựng tờ bìa lật được.
+   Nằm đúng chỗ tờ bìa (nửa phải sách) nên trông y hệt. */
+.h-cover-flat {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  width: 50%;
+  height: 100%;
+}
+
 .h-sheet--blank {
   visibility: hidden;
 }

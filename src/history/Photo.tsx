@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import type { PhotoKind } from './data';
 
 /* Ảnh minh hoạ tạm, vẽ bằng SVG, dùng khi chưa có ảnh tư liệu thật. */
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 function Portrait() {
   return (
-    <svg viewBox="0 0 100 120" className="h-art" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg xmlns={SVG_NS} viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice">
       <defs>
         <linearGradient id="pt-bg" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#e4dcc2" />
@@ -22,16 +25,23 @@ function Portrait() {
   );
 }
 
-function Facade() {
-  // Mặt tiền dãy nhà 2 tầng có hành lang, cột cờ và hàng cây
+function Facade({ old }: { old: boolean }) {
+  // Mặt tiền dãy nhà 2 tầng có hành lang, cột cờ và hàng cây. Ảnh cũ: trắng đen ngả nâu, làm sẵn trong hình.
   return (
-    <svg viewBox="0 0 400 260" className="h-art" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg xmlns={SVG_NS} viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">
       <defs>
+        <filter id="fc-old">
+          <feColorMatrix
+            type="matrix"
+            values="0.227 0.765 0.077 0 0  0.213 0.715 0.072 0 0  0.183 0.615 0.062 0 0  0 0 0 1 0"
+          />
+        </filter>
         <linearGradient id="fc-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#9fbfd6" />
           <stop offset="1" stopColor="#e8e2c8" />
         </linearGradient>
       </defs>
+      <g filter={old ? 'url(#fc-old)' : undefined}>
       <rect width="400" height="260" fill="url(#fc-sky)" />
       <rect y="196" width="400" height="64" fill="#9aa36b" />
       <path d="M0 214h400v8H0z" fill="#c9b98c" />
@@ -59,6 +69,7 @@ function Facade() {
           <circle cx={x + r * 0.4} cy={y - r * 0.8} r={r * 0.7} fill="#648446" />
         </g>
       ))}
+      </g>
     </svg>
   );
 }
@@ -68,7 +79,7 @@ function Aerial({ isNew }: { isNew: boolean }) {
   const roof = isNew ? '#b5473b' : '#7c6a50';
   const roof2 = isNew ? '#c9c2b2' : '#8e7c60';
   return (
-    <svg viewBox="0 0 400 250" className="h-art" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg xmlns={SVG_NS} viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
       <rect width="400" height="250" fill={isNew ? '#7a9656' : '#9a916f'} />
       <path d="M0 200 L400 168 L400 196 L0 228z" fill={isNew ? '#4b4b4d' : '#b2a582'} />
       {isNew && <path d="M0 214 L400 182" stroke="#e8e2c8" strokeWidth="1.5" strokeDasharray="10 8" />}
@@ -102,7 +113,24 @@ function Aerial({ isNew }: { isNew: boolean }) {
 function PlaceholderArt({ kind }: { kind: PhotoKind }) {
   if (kind === 'portrait') return <Portrait />;
   if (kind === 'aerial-old' || kind === 'aerial-new') return <Aerial isNew={kind === 'aerial-new'} />;
-  return <Facade />;
+  return <Facade old={kind === 'old'} />;
+}
+
+/*
+ * Mỗi hình minh hoạ được vẽ một lần thành ảnh (data URL) rồi dùng lại ở mọi nơi.
+ * Tờ giấy đang lật chứa 12 bản sao mỗi trang: dùng <img> thì trình duyệt chỉ giải mã ảnh một lần,
+ * còn vẽ thẳng SVG thì mỗi bản sao là hàng chục phần tử phải tính kiểu, bố cục và vẽ lại, làm lật sách bị giật.
+ */
+const KINDS: PhotoKind[] = ['old', 'color', 'aerial-old', 'aerial-new', 'portrait'];
+const ART = new Map<PhotoKind, string>();
+if (typeof document !== 'undefined') {
+  const box = document.createElement('div');
+  const root = createRoot(box);
+  for (const kind of KINDS) {
+    flushSync(() => root.render(<PlaceholderArt kind={kind} />));
+    ART.set(kind, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(box.innerHTML)}`);
+  }
+  root.unmount();
 }
 
 interface PhotoProps {
@@ -116,7 +144,11 @@ interface PhotoProps {
 export function PhotoView({ kind, src, alt, className = '' }: PhotoProps) {
   return (
     <div className={`h-photo h-photo--${kind} ${className}`} role="img" aria-label={alt}>
-      {src ? <img src={src} alt="" draggable={false} /> : <PlaceholderArt kind={kind} />}
+      {src ? (
+        <img src={src} alt="" draggable={false} />
+      ) : (
+        <img className="h-art" src={ART.get(kind)} alt="" draggable={false} />
+      )}
     </div>
   );
 }

@@ -21,6 +21,9 @@
   /* Các phần tràn rộng, không khung: tối đa 1440px nội dung */
   max-width: 1488px;
   padding-inline: 24px;
+  /* Cắt phần thò ra ngang (ví dụ nửa phải đã ẩn của cuốn sách khi gập bìa sau dịch sang phải),
+     để trang không có thanh cuộn ngang. "clip" không tạo vùng cuộn riêng nên không ảnh hưởng cuộn dọc. */
+  overflow-x: clip;
 }
 
 .history {

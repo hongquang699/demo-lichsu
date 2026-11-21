@@ -150,3 +150,17 @@ export const CAMPUS_COMPARE = {
   old: { kind: 'aerial-old' as PhotoKind, src: '', label: 'Trường cũ' },
   next: { kind: 'aerial-new' as PhotoKind, src: '', label: 'Trường mới' },
 };
+
+/** Trang tác giả ở cuối sách. Những chỗ "[...]" cần thay bằng thông tin thật. */
+export const COLOPHON = {
+  title: 'Sử ký Trường THPT Chuyên Phan Bội Châu',
+  years: '1974 – nay',
+  credits: [
+    { role: 'Biên soạn', name: '[Họ tên tác giả hoặc ban biên soạn]' },
+    { role: 'Tư liệu, hình ảnh', name: '[Nguồn tư liệu: thư viện, phòng truyền thống nhà trường…]' },
+    { role: 'Thiết kế', name: '[Họ tên người thiết kế]' },
+  ],
+  note: '[Lời cảm ơn các thế hệ thầy cô, cựu học sinh đã đóng góp tư liệu.]',
+  place: 'Nghệ An',
+  year: '2026',
+};

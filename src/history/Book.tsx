@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DESK_LAST, PHONE_LAST } from './BookPages';
 import { desktopScene, phoneScene, type Drag, type Flip, type Phase } from './BookScenes';
 import { ERAS } from './data';
 import { prefersReducedMotion, useInView, useMediaQuery, useVisible } from './hooks';
@@ -29,7 +30,10 @@ export function Book({ page, onPage }: BookProps) {
   const single = useMediaQuery('(max-width: 760px)');
   // Máy tính: một mặt sách (hai trang) là một giai đoạn. Điện thoại: mỗi lần chỉ một trang, một giai đoạn có hai trang.
   const per = single ? 2 : 1;
-  const lastView = (LAST + 1) * per - 1;
+  // Sau giai đoạn cuối còn trang tác giả và bìa sau
+  const lastView = single ? PHONE_LAST : DESK_LAST;
+  /** Giai đoạn ứng với trang v (các trang cuối sách vẫn tính là giai đoạn cuối). */
+  const eraOf = (v: number) => Math.min(LAST, Math.floor(v / per));
   const [phase, setPhase] = useState<Phase>('closed');
   const [target, setTarget] = useState(page * per); // trang cần tới
   const [shown, setShown] = useState(page * per); // trang đang nằm yên trên sách
@@ -61,7 +65,7 @@ export function Book({ page, onPage }: BookProps) {
 
   // Chọn giai đoạn từ thanh mốc: tới trang đầu của giai đoạn đó
   useEffect(() => {
-    if (Math.floor(target / per) !== page) setTarget(page * per);
+    if (eraOf(target) !== page) setTarget(page * per);
   }, [page, target, per]);
 
   // Trang đích thay đổi (nút, thanh mốc, tự giở) -> lật từ trang đang hiện sang trang đích
@@ -77,7 +81,7 @@ export function Book({ page, onPage }: BookProps) {
   const step = (d: 1 | -1) => {
     const next = Math.min(lastView, Math.max(0, target + d));
     setTarget(next);
-    onPage(Math.floor(next / per));
+    onPage(eraOf(next));
   };
 
   // Tự giở trang: chỉ chạy khi sách đang hiện trên màn hình, đứng yên và người dùng không đặt tay lên sách
@@ -164,7 +168,7 @@ export function Book({ page, onPage }: BookProps) {
     if (drag.release === 1) {
       setShown(drag.to);
       setTarget(drag.to);
-      onPage(Math.floor(drag.to / per));
+      onPage(eraOf(drag.to));
     }
     setDrag(null);
   };
@@ -197,6 +201,17 @@ export function Book({ page, onPage }: BookProps) {
   };
   const content = single ? phoneScene(scene) : desktopScene(scene);
 
+  // Máy tính: đã gập bìa sau, sách chỉ còn nửa trái (mặt sau bìa) nên dịch vào giữa
+  const shut = !single && phase === 'open' && !flip && !drag && shown === lastView;
+  const atEnd = phase === 'open' && target === lastView;
+
+  /** Đọc lại từ đầu: lật thẳng về trang đầu tiên. */
+  const restart = () => {
+    setNudge((n) => n + 1);
+    setTarget(0);
+    onPage(0);
+  };
+
   const pick = (i: number) => {
     setNudge((n) => n + 1);
     if (phase !== 'open') setPhase('open');
@@ -217,7 +232,7 @@ export function Book({ page, onPage }: BookProps) {
             onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setHold(false)}
           >
             <div
-              className={`h-book is-${phase}${single ? ' is-single' : ''}${drag ? ' is-grabbing' : ''}`}
+              className={`h-book is-${phase}${single ? ' is-single' : ''}${drag ? ' is-grabbing' : ''}${shut ? ' is-shut' : ''}`}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -242,15 +257,21 @@ export function Book({ page, onPage }: BookProps) {
               <Chevron dir="left" />
             </button>
             <div className="h-book-nav__mid">
-              <p className="h-book-nav__hint">
-                {phase !== 'open' ? 'Đang mở sách…' : single ? 'Vuốt trang sang trái để lật' : 'Kéo mép trang để lật'}
-              </p>
+              {atEnd ? (
+                <button type="button" className="h-book-nav__restart" onClick={restart}>
+                  Đọc lại từ đầu
+                </button>
+              ) : (
+                <p className="h-book-nav__hint">
+                  {phase !== 'open' ? 'Đang mở sách…' : single ? 'Vuốt trang sang trái để lật' : 'Kéo mép trang để lật'}
+                </p>
+              )}
               {/* Vạch đếm giờ tới lần tự giở trang kế tiếp */}
               <span className="h-autoflip" aria-hidden="true">
                 <span key={`${page}-${nudge}`} className={`h-autoflip__fill${autoRunning ? ' is-running' : ''}`} />
               </span>
             </div>
-            <button type="button" className="h-arrow" onClick={() => go(1)} disabled={phase === 'open' && target === lastView} aria-label="Trang sau">
+            <button type="button" className="h-arrow" onClick={() => go(1)} disabled={atEnd} aria-label="Trang sau">
               <Chevron dir="right" />
             </button>
           </div>

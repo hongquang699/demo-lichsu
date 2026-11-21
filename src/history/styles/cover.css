@@ -73,3 +73,34 @@
   font-weight: 600;
   line-height: 1.08;
 }
+
+/* Mặt sau bìa: nằm ở nửa trái khi sách gập lại nên gáy và rãnh bản lề ở mép phải */
+.h-cover--back {
+  border-radius: 6px 0 0 6px;
+  background:
+    var(--grain),
+    var(--grain),
+    radial-gradient(80% 65% at 70% 12%, rgb(255 222 170 / 0.24), transparent 62%),
+    radial-gradient(130% 120% at 50% 50%, transparent 58%, rgb(var(--dark-rgb) / 0.4)),
+    linear-gradient(270deg, rgb(var(--dark-rgb) / 0.45) 0, rgb(var(--dark-rgb) / 0.12) 12px, rgb(255 220 180 / 0.14) 16px, transparent 22px),
+    linear-gradient(200deg, var(--leather-hi), var(--leather) 70%);
+  background-size: 160px 160px, 97px 97px, auto, auto, auto, auto;
+}
+
+.h-cover__back {
+  color: #f1d590; /* hoa sen màu nhũ vàng như bìa trước */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  margin-bottom: 18%;
+  max-width: 100%; /* không rộng hơn bìa: dòng tên trường dài thì xuống hàng */
+  padding-inline: 24px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.h-cover--back {
+  align-content: end;
+}

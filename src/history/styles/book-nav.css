@@ -22,6 +22,27 @@
   color: var(--muted);
 }
 
+/* Đọc hết sách: chữ hướng dẫn đổi thành nút đọc lại */
+.h-book-nav__restart {
+  padding: 6px 14px;
+  border: 1px solid rgb(var(--burg-rgb) / 0.35);
+  border-radius: 999px;
+  background: rgb(var(--beige-rgb) / 0.75);
+  color: var(--burgundy);
+  font: 600 0.85rem var(--serif);
+  cursor: pointer;
+  transition: background-color 200ms;
+}
+
+.h-book-nav__restart:hover {
+  background: var(--paper);
+}
+
+.h-book-nav__restart:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}
+
 /* Vạch mảnh chạy dần tới lúc sách tự giở trang kế tiếp */
 .h-autoflip {
   display: block;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ERAS, type Era } from './data';
+import { COLOPHON, ERAS, type Era } from './data';
 import { Lotus } from './Ornament';
 import { PhotoView, ZoomablePhoto } from './Photo';
 
@@ -88,9 +88,82 @@ export function Cover() {
   );
 }
 
+/* ---------- Cuối sách: trang tác giả, mặt trong bìa sau, mặt sau bìa ---------- */
+
+/** Trang tác giả (trang ghi tên sách, người biên soạn, nguồn tư liệu), ở trang trái của mặt sách cuối. */
+function AuthorPage() {
+  return (
+    <div className="h-page h-page--left h-author">
+      <p className="h-page__running">Thông tin sách</p>
+      <div className="h-author__body">
+        <Lotus className="h-author__rule" />
+        <p className="h-author__title">{COLOPHON.title}</p>
+        <p className="h-author__years">{COLOPHON.years}</p>
+        <dl className="h-author__credits">
+          {COLOPHON.credits.map((c) => (
+            <div key={c.role}>
+              <dt>{c.role}</dt>
+              <dd>{c.name}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="h-author__note">{COLOPHON.note}</p>
+        <p className="h-author__place">
+          {COLOPHON.place}, {COLOPHON.year}
+        </p>
+      </div>
+      <span className="h-page__folio">{ERAS.length * 2 + 1}</span>
+    </div>
+  );
+}
+
+/** Mặt trong bìa sau: giấy lót, chữ "Hết" ở giữa. */
+function EndPage() {
+  return (
+    <div className="h-page h-page--right h-endpage">
+      <div className="h-endpage__mark">
+        <Lotus className="h-endpage__rule" />
+        <p>Hết</p>
+        <Lotus className="h-endpage__rule" />
+      </div>
+    </div>
+  );
+}
+
+/** Mặt sau bìa sách: da thuộc như bìa trước, tên trường và hoa văn ép nhũ vàng, không có ảnh. */
+function BackCover() {
+  return (
+    <div className="h-cover h-cover--back">
+      <div className="h-cover__back">
+        <Lotus className="h-cover__rule" />
+        <p className="h-cover__over">Trường THPT Chuyên Phan Bội Châu</p>
+        <p className="h-cover__years">Nghệ An · 1974 – nay</p>
+        <Lotus className="h-cover__rule" />
+      </div>
+    </div>
+  );
+}
+
 export const left = (i: number) => <LeftPage key={`l${i}`} era={ERAS[i]} index={i} />;
 export const right = (i: number) => <RightPage key={`r${i}`} era={ERAS[i]} index={i} />;
-/** Trên điện thoại mỗi giai đoạn là hai trang liền nhau: trang chẵn là ảnh, trang lẻ là hiệu trưởng và bối cảnh. */
-export const face = (v: number) => (v % 2 ? right(v >> 1) : left(v >> 1));
+
+const N = ERAS.length;
+
+/*
+ * Máy tính: mặt sách thứ v. 0..N-1 là các giai đoạn; N là mặt sách cuối (trang tác giả | mặt trong bìa sau);
+ * N+1 là sách đã gập, chỉ còn mặt sau bìa nằm ở nửa trái.
+ */
+export const leftOf = (v: number) => (v < N ? left(v) : v === N ? <AuthorPage key="author" /> : <BackCover key="back" />);
+export const rightOf = (v: number) => (v < N ? right(v) : v === N ? <EndPage key="end" /> : null);
+/** Mặt sách cuối cùng (N+1) là bìa sau gập lại: tờ lật tới đó là bìa cứng, không cong. */
+export const DESK_LAST = N + 1;
+
+/**
+ * Điện thoại: trang thứ v. Mỗi giai đoạn là hai trang liền nhau (trang chẵn là ảnh, trang lẻ là hiệu trưởng và bối cảnh),
+ * sau đó là trang tác giả rồi mặt sau bìa.
+ */
+export const face = (v: number) =>
+  v < 2 * N ? (v % 2 ? right(v >> 1) : left(v >> 1)) : v === 2 * N ? <AuthorPage key="author" /> : <BackCover key="back" />;
+export const PHONE_LAST = 2 * N + 1;
 /** Mặt sau tờ giấy trên điện thoại: giấy trắng. */
 export const blank = <div className="h-page h-page--blank" />;

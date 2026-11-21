@@ -109,7 +109,17 @@
 
 .h-book.is-closed .h-book__spine,
 .h-book.is-opening .h-book__spine,
+.h-book.is-shut .h-book__spine,
 .h-book.is-single .h-book__spine {
+  opacity: 0;
+}
+
+/* Đọc hết, gập bìa sau: chỉ còn nửa trái (mặt sau bìa) nên dịch vào giữa, bìa phải không còn */
+.h-book.is-shut {
+  transform: rotateX(var(--tilt)) translateX(25%);
+}
+
+.h-book.is-shut .h-book__board--right {
   opacity: 0;
 }
 

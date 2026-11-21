@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { blank, Cover, face, left, right } from './BookPages';
+import { blank, Cover, DESK_LAST, face, left, leftOf, right, rightOf } from './BookPages';
 import { noop, TurningLeaf } from './TurningLeaf';
 
 /* ---------- Những gì nằm trên cuốn sách ở mỗi lúc: các trang đang mở và tờ giấy đang lật ---------- */
@@ -119,12 +119,16 @@ export function phoneScene({ prebuilt, phase, flip, drag, shown, lastView, onOpe
 
 /** Máy tính: sách mở hai trang, tờ giấy lật qua gáy ở giữa. */
 export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onOpened, onTurned }: SceneState): ReactNode {
-  const spread = (l: number, r: number) => (
-    <>
-      <div className="h-sheet h-sheet--left">{left(l)}</div>
-      <div className="h-sheet h-sheet--right">{right(r)}</div>
-    </>
-  );
+  // Khi sách đã gập (chỉ còn bìa sau ở nửa trái) thì nửa phải không có gì: ẩn tờ giấy đó đi
+  const spread = (l: number, r: number) => {
+    const rightPage = rightOf(r);
+    return (
+      <>
+        <div className="h-sheet h-sheet--left">{leftOf(l)}</div>
+        <div className={`h-sheet h-sheet--right${rightPage ? '' : ' h-sheet--blank'}`}>{rightPage}</div>
+      </>
+    );
+  };
 
   if (phase !== 'open') {
     return (
@@ -152,7 +156,9 @@ export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onO
   if (flip || drag) {
     const f = (drag ?? flip) as Flip;
     const fwd = f.dir === 1;
-    let className = 'is-auto';
+    // Gập hoặc mở bìa sau: bìa cứng nên không cong, lật đều như lúc mở bìa trước
+    const hard = f.from === DESK_LAST || f.to === DESK_LAST;
+    let className = hard ? 'is-auto is-cover' : 'is-auto';
     let style: CSSProperties | undefined;
     if (drag) {
       if (drag.release === undefined) {
@@ -164,6 +170,7 @@ export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onO
         const ms = Math.round(700 + 1100 * Math.abs(drag.release - drag.p));
         style = { '--from': drag.p, '--to': drag.release, '--release-ms': `${ms}ms` } as CSSProperties;
       }
+      if (hard) className += ' is-hard';
     }
     return (
       <>
@@ -173,8 +180,8 @@ export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onO
           faces={`${f.from}-${f.to}`}
           className={className}
           style={style}
-          front={fwd ? right(f.from) : left(f.from)}
-          back={fwd ? left(f.to) : right(f.to)}
+          front={fwd ? rightOf(f.from) : leftOf(f.from)}
+          back={fwd ? leftOf(f.to) : rightOf(f.to)}
           onEnd={onTurned}
         />
       </>
@@ -190,8 +197,8 @@ export function desktopScene({ prebuilt, phase, flip, drag, shown, lastView, onO
           dir={1}
           faces={`${shown}-${shown + 1}`}
           className="is-parked"
-          front={right(shown)}
-          back={left(shown + 1)}
+          front={rightOf(shown)}
+          back={leftOf(shown + 1)}
           onEnd={noop}
         />
       )}

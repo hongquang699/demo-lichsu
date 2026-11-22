@@ -285,6 +285,30 @@
   );
 }
 
+/* Máy yếu: tờ phẳng một dải, không cong không gợn; bóng chỉ đổi độ mờ nên không phải vẽ lại mỗi khung hình */
+.h-turning.is-lite {
+  --bend: 0deg !important;
+  --bend-from: 0deg !important;
+}
+
+.h-turning.is-lite .h-seg > .h-leaf__face::after {
+  inset: 0;
+  will-change: auto;
+  opacity: calc(var(--lift) * 0.95);
+  background: linear-gradient(
+    var(--shade-dir, 90deg),
+    rgb(var(--shade-rgb) / 0.5) 0%,
+    rgb(var(--shade-rgb) / 0.14) 22%,
+    transparent 48%,
+    rgb(255 255 255 / 0.22) 86%,
+    rgb(var(--shade-rgb) / 0.12) 100%
+  );
+}
+
+.h-turning.is-lite .h-seg > .h-leaf__face {
+  overflow: hidden;
+}
+
 /* Bóng của tờ giấy đổ xuống hai trang bên dưới */
 .h-cast {
   position: absolute;
